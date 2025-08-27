@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package server.api.pbs.v1.errors;
+
+option go_package = "github.com/kheina/openconman/src/gen/pbs/api/error;error";
+
+message ApiError {
+  // Status refers to an http response status code
+  // @inject_tag: json:"status"
+  uint32 status = 10;
+  // Code is a string that indicates the type of error that occurred.
+  // can be more specific than an http response status code
+  // @inject_tag: json:"code"
+  string code = 20;
+  // Message is the string describing the error that occurred
+  // @inject_tag: json:"error"
+  string message = 30;
+  // Refid is a unique identifier for looking this error in logs
+  // @inject_tag: json:"refid"
+  string refid = 40;
+}

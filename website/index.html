@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang='en'>
+	<head>
+		<meta charset='UTF-8'>
+		<link rel='icon' href='/favicon.ico'>
+		<link href='/assets/fonts/style.css' rel='stylesheet'>
+		<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+		<title>openconman</title>
+	</head>
+	<!-- ♀ -->
+	<body>
+		<style>
+			html, body {
+				font-family: Bitstream Vera Sans, DejaVu Sans, Arial, Helvetica, sans-serif;
+				background: #151416;
+				width: 100vw;
+				height: 100vh;
+			}
+			html, body, p, main {
+				margin: 0;
+			}
+			body, div {
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+			}
+			main {
+				color: #ddd;
+				text-align: center;
+				width: 100%;
+			}
+			h1 {
+				margin: 25px 0;
+			}
+			div {
+				padding: 25px;
+			}
+			img {
+				max-height: 100px;
+			}
+			img#icon {
+				opacity: 0.25;
+			}
+			img#loading {
+				position: absolute;
+				z-index: 1;
+			}
+		</style>
+		<main>
+			<div>
+				<img src='/assets/loading.gif' id='loading'>
+				<img src='/assets/favicon/splash.png' id='icon'>
+				<noscript>
+					<style>
+						main img#icon {
+							opacity: 1;
+						}
+						main img#loading {
+							opacity: 0;
+						}
+					</style>
+					<h1>Javascript Required</h1>
+					<p>
+						openconman runs on Vue 3 and requires javascript to run correctly. Please check your browser settings and enable javascript.
+					</p>
+				</noscript>
+			</div>
+		</main>
+	</body>
+	<script type='module' src='/src/main.ts'></script>
+</html>

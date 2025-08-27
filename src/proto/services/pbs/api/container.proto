@@ -1,0 +1,127 @@
+syntax = "proto3";
+
+package server.api.pbs.v1.containers;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/kheina/openconman/src/gen/pbs/api/containers;containers";
+
+message MountPoint {
+  // Type is the type of mount, see [mount.Type] definitions for details.
+  // Enum: ["bind","volume","tmpfs","npipe","cluster","image"]
+  optional string type = 10;
+
+  // Name is the name reference to the underlying data defined by `Source`
+  // e.g., the volume name.
+  optional string name = 20;
+
+  // Source is the source location of the mount.
+  //
+  // For volumes, this contains the storage location of the volume (within
+  // `/var/lib/docker/volumes/`). For bind-mounts, and `npipe`, this contains
+  // the source (host) part of the bind-mount. For `tmpfs` mount points, this
+  // field is empty.
+  string source = 30;
+
+  // Destination is the path relative to the container root (`/`) where the
+  // Source is mounted inside the container.
+  string destination = 40;
+
+  // Driver is the volume driver used to create the volume (if it is a
+  // volume).
+  optional string driver = 50;
+
+  // Mode is a comma separated list of options supplied by the user when
+  // creating the bind/volume mount.
+  //
+  // The default is platform-specific (`"z"` on Linux, empty on Windows).
+  string mode = 60;
+
+  // RW indicates whether the mount is mounted writable (read-write).
+  bool rw = 70;
+
+  // Propagation describes how mounts are propagated from the host
+  // into the mount point, and vice-versa. Refer to the Linux kernel
+  // documentation for details:
+  // https://www.kernel.org/doc/Documentation/filesystems/sharedsubtree.txt
+  //
+  // This field is not used on Windows.
+  // Enum: ["rprivate","private","rshared","shared","rslave","slave"]
+  optional string propagation = 80;
+}
+
+message Port {
+  // Host IP address that the container's port is mapped to
+  optional string ip = 10;
+
+  // Port on the container
+  uint32 private_port = 20;
+
+  // Port exposed on the host
+  optional uint32 public_port = 30;
+
+  // type
+  // Enum: ["tcp","udp","sctp"]
+  string type = 40;
+}
+
+message HostConfig {
+  string network_mode = 10;
+  map<string, string> annotations = 20;
+}
+
+message Health {
+  // Status is one of [NoHealthcheck], [Starting], [Healthy] or [Unhealthy].
+  string status = 10;
+  // FailingStreak is the number of consecutive failures
+  uint64 failing_streak = 20;
+}
+
+message Container {
+  // Container ID
+  string id = 10;
+
+  // Container Image
+  string image = 20;
+
+  // Container Image
+  string image_id = 30;
+
+  // ImageManifestDescriptor
+
+  // Startup Command
+  string command = 40;
+
+  // When this container was created
+  google.protobuf.Timestamp created = 50;
+
+  // List of labels applied to the container image
+  map<string, string> labels = 60;
+
+  // List of volume mounts this container has access to
+  repeated MountPoint mounts = 70;
+
+  // The name of the running container
+  repeated string names = 80;
+
+  // List of networks this container has access to
+  repeated Port networks = 90;
+
+  // Size in bytes of the files which have been created or changed
+  int64 SizeRw = 100;
+
+  // Total size of all the files in the container, in bytes
+  int64 SizeRootFs = 110;
+
+  // Enum referring to the current state of the live container. Should be one
+  // of: created, running, paused, restarting, exited, removing, dead
+  string state = 120;
+
+  // How long the current live container has been alive for
+  string status = 130;
+
+  // How many times has the container restart
+  Health Health = 140;
+
+  HostConfig host_config = 150;
+}

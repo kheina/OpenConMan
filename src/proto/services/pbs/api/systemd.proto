@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package server.api.pbs.v1.systemd;
+
+option go_package = "github.com/kheina/openconman/src/gen/pbs/api/systemd;systemd";
+
+message UnitStatus {
+  // The primary unit name as string
+  string name = 10;
+  // The human readable description string
+  string description = 20;
+  // The load state (i.e. whether the unit file has been loaded successfully)
+  string load_state = 30;
+  // The active state (i.e. whether the unit is currently started or not)
+  string active_state = 40;
+  // The sub state (a more fine-grained version of the active state that is
+  // specific to the unit type, which the active state is not)
+  string sub_state = 50;
+  // A unit that is being followed in its state by this unit, if there is any,
+  // otherwise the empty string.
+  string followed = 60;
+  // The unit object path
+  string path = 70;
+  // If there is a job queued for the job unit the numeric job id, 0 otherwise
+  uint32 job_id = 80;
+  // The job type as string
+  string job_type = 90;
+  // The job object path
+  string job_path = 100;
+}

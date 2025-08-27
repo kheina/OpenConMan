@@ -1,0 +1,63 @@
+---
+name: CI
+
+on:
+  push:
+    branches: ["main", "dev"]
+
+jobs:
+  # add static check, tests and whatever else
+
+  release:
+    name: Release
+    # needs:
+    #   - static_check
+    #   - test
+    runs-on: debian-latest
+    outputs:
+      go_version: ${{ steps.v.outputs.go_version }}
+      version: ${{ steps.v.outputs.version }}
+      exec: ${{ steps.build.outputs.exec }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Version
+        id: v
+        run: |
+          chmod +x ./scripts/version.sh
+          echo "version=$(./scripts/version.sh)" >> "$GITHUB_OUTPUT"
+          echo "go_version=$(cat go.mod | grep -P 'go ([0-9]*[.][0-9]*)' | awk -F 'go ' '{print $2}')" >> \
+            "$GITHUB_OUTPUT"
+      - name: Set up Golang
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ steps.v.outputs.go_version }}
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+      - name: Install Dependencies
+        run: |
+          chmod +x ./scripts/deps.sh
+          make deps
+      - name: Build
+        id: build
+        run: |
+          chmod +x ./scripts/build.sh
+          make build-ui
+          echo "exec=bin/conman" >> "$GITHUB_OUTPUT"
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ steps.v.outputs.version }}
+          prerelease: ${{ contains(steps.v.outputs.version, 'dev') }}
+          draft: false
+          files: bin/*
+          generate_release_notes: true
+          name: ${{ steps.v.outputs.version }}
+          body: |
+            todo
+
+
+# heavily used this blogpost to help write this, and I'll probably need to reference it again when I edit this to have more stuff
+# https://blog.kubesimplify.com/automated-github-releases-with-github-actions-and-conventional-commits

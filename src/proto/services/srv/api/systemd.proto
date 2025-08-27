@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package server.api.systemd.v1;
+
+import "services/pbs/api/systemd.proto";
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+option go_package = "github.com/kheina/openconman/src/gen/srv/api/systemd;systemd";
+
+service Systemd {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_tag) = {
+    name: "Systemd Service"
+    description: "description"
+  };
+
+  rpc ListServices(GetServiceStatusesRequest)
+      returns (GetServiceStatusesResponse) {
+    option (google.api.http) = {
+      get: "/v1/services"
+    };
+  }
+
+  rpc EnableService(GetEnableServiceRequest)
+      returns (GetEnableServiceResponse) {
+    option (google.api.http) = {
+      get: "/v1/service/enable/{name}"
+    };
+  }
+
+  rpc DisableService(GetEnableServiceRequest)
+      returns (GetEnableServiceResponse) {
+    option (google.api.http) = {
+      get: "/v1/service/disable/{name}"
+    };
+  }
+}
+
+message GetServiceStatusesRequest {}
+
+message GetServiceStatusesResponse {
+  repeated server.api.pbs.v1.systemd.UnitStatus items = 10;
+}
+
+message GetEnableServiceRequest {
+  // The primary unit name as string
+  string name = 10;
+}
+
+message GetEnableServiceResponse {
+  server.api.pbs.v1.systemd.UnitStatus item = 10;
+}
