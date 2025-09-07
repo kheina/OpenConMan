@@ -17,7 +17,7 @@ const containers: Ref<{
 } | null> = ref(null);
 
 fetch(
-	"http://127.0.0.1:5050/v1/containers"
+	"https://127.0.0.1:5050/v1/containers"
 ).then(
 	r => r.json()
 ).then(r => {

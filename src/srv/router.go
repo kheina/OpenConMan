@@ -2,6 +2,7 @@ package srv
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"net"
@@ -16,8 +17,10 @@ import (
 	"github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 
 	"github.com/kheina/openconman/src/srv/api"
+	"github.com/kheina/openconman/src/srv/certs"
 	"github.com/kheina/openconman/src/srv/middleware/cors"
 	"github.com/kheina/openconman/src/srv/ui"
 )
@@ -30,15 +33,17 @@ type Router struct {
 	shutdownCh chan struct{}
 	logger     hclog.Logger
 
+	cert []byte
+	key  []byte
+
 	// cancelling the Serve context triggers a graceful shutdown
 	SrvCancel context.CancelFunc
-	// cancelling the Kill contexted triggers a forced shutdown
+	// cancelling the Kill context triggers a forced shutdown
 	KillCancel context.CancelFunc
 
-	listeners    []net.Listener
 	grpcServer   *grpc.Server
-	httpServer   *http.Server
 	grpcListener net.Listener
+	httpServer   *http.Server
 	httpListener net.Listener
 }
 
@@ -59,6 +64,7 @@ func MakeShutdownCh() chan struct{} {
 	return resultCh
 }
 
+// MakeWaitGroupCh creates a channel that returns a message on waitgroup completion
 func MakeWaitGroupCh(wg interface{ Wait() }) chan struct{} {
 	ch := make(chan struct{})
 	go func() {
@@ -114,6 +120,8 @@ func (r *Router) ForceShutdown() error {
 	return nil
 }
 
+// Serve runs the server and serves the conman server with the provided details
+// from NewRouter
 func (r *Router) Serve() error {
 	const op = "srv.(Router).Serve"
 	switch {
@@ -125,26 +133,56 @@ func (r *Router) Serve() error {
 		return fmt.Errorf("%s: router missing serve cancel", op)
 	}
 
-	ctx, kctx := r.srvCtx, r.killCtx
-	r.grpcServer = grpc.NewServer()
-	if err := api.RegisterGrpcServices(ctx, r.grpcServer, r.logger); err != nil {
+	var err error
+	if r.grpcListener, err = net.Listen("tcp", r.gaddr); err != nil {
+		return fmt.Errorf("%s: failed to init grpc listener: %w", op, err)
+	}
+	if r.httpListener, err = net.Listen("tcp", r.addr); err != nil {
+		return fmt.Errorf("%s: failed to listen on address: %w", op, err)
+	}
+
+	var conf *tls.Config
+	grpco := []grpc.ServerOption{}
+	switch {
+	case r.cert == nil && r.key != nil:
+		fallthrough
+	case r.cert != nil && r.key == nil:
+		return fmt.Errorf("%s: tls cert or key provided, but not both", op)
+	case r.cert != nil && r.key != nil:
+		// valid, load the certs below
+	default:
+		r.cert, r.key, err = certs.GenerateCertificate()
+		if err != nil {
+			return fmt.Errorf("%s: failed to generate tls cert: %w", op, err)
+		}
+		r.logger.Debug("TLS certificate generated")
+	}
+
+	cert, err := tls.X509KeyPair(r.cert, r.key)
+	if err != nil {
+		return fmt.Errorf("%s: failed to parse tls cert and key: %w", op, err)
+	}
+	r.logger.Debug("TLS certificate loaded")
+
+	conf = &tls.Config{
+		ServerName:   "conman", // this may need to be updated to a dns name or something
+		NextProtos:   []string{"h2", "http/1.1"},
+		ClientAuth:   tls.RequestClientCert,
+		Certificates: []tls.Certificate{cert},
+	}
+
+	// don't convert the grpc listener, as it's handled internally by grpc.Server
+	// r.grpcListener = tls.NewListener(r.grpcListener, conf)
+	r.httpListener = tls.NewListener(r.httpListener, conf)
+	grpco = append(grpco, grpc.Creds(credentials.NewTLS(conf)))
+
+	ctx := r.srvCtx
+	r.grpcServer = grpc.NewServer(grpco...)
+	if err = api.RegisterGrpcServices(ctx, r.grpcServer, r.logger); err != nil {
 		return fmt.Errorf("%s: failed to register gRPC services: %w", op, err)
 	}
-	wg := new(sync.WaitGroup)
-	wg.Add(2) // number of listeners, grpc + http
 
-	// start the grpc server for the api
-	r.logger.Info(fmt.Sprintf("%s: serving gRPC on %s", op, r.gaddr))
-	var err error
-	r.grpcListener, err = net.Listen("tcp", r.gaddr)
-	go func() {
-		defer wg.Done()
-		if err := r.grpcServer.Serve(r.grpcListener); err != nil {
-			r.logger.Info(fmt.Sprintf("%s: gRPC server shutdown: %s", op, err.Error()))
-		}
-	}()
-
-	h, err := api.Handler(ctx, r.gaddr, r.logger)
+	h, err := api.Handler(ctx, r.gaddr, r.logger, conf)
 	if err != nil {
 		return fmt.Errorf("%s: failed to retrieve api handler: %w", op, err)
 	}
@@ -170,12 +208,27 @@ func (r *Router) Serve() error {
 		ReadTimeout:       30 * time.Second,
 		IdleTimeout:       30 * time.Second,
 		BaseContext:       func(net.Listener) context.Context { return ctx },
+		TLSConfig:         conf,
+		ErrorLog:          r.logger.StandardLogger(&hclog.StandardLoggerOptions{ForceLevel: hclog.Debug}),
 	}
 
-	r.httpListener, err = net.Listen("tcp", r.addr)
-	if err != nil {
-		return fmt.Errorf("%s: failed to listen on address: %w", op, err)
-	}
+	return r.serve()
+}
+
+func (r Router) serve() error {
+	const op = "srv.(Router).serve"
+	ctx, kctx := r.srvCtx, r.killCtx
+	wg := new(sync.WaitGroup)
+	wg.Add(2) // number of listeners, grpc + http
+
+	// start the grpc server for the api
+	r.logger.Info(fmt.Sprintf("%s: serving gRPC on %s", op, r.gaddr))
+	go func() {
+		defer wg.Done()
+		if err := r.grpcServer.Serve(r.grpcListener); err != nil {
+			r.logger.Info(fmt.Sprintf("%s: gRPC server shutdown: %s", op, err.Error()))
+		}
+	}()
 
 	r.logger.Info(fmt.Sprintf("%s: listening on %s", op, r.addr))
 	go func() {
@@ -198,10 +251,6 @@ serve:
 	}
 
 	go r.GracefulShutdown()
-	// go r.grpcServer.Stop()
-	// _ = r.httpServer.Close()
-	// _ = r.httpListener.Close()
-	// _ = r.grpcListener.Close()
 	wgCh := MakeWaitGroupCh(wg)
 
 shutdown:
@@ -234,7 +283,8 @@ shutdown:
 	}
 }
 
-func NewRouter(host string, port, grpcPort uint, logLevel hclog.Level) (*Router, error) {
+func NewRouter(host string, port, grpcPort uint, workDir string, logLevel hclog.Level, cert, key []byte) (*Router, error) {
+	const op = "srv.NewRouter"
 	var logLock sync.Mutex
 	logger := hclog.New(&hclog.LoggerOptions{
 		Output: os.Stdout,
@@ -242,7 +292,11 @@ func NewRouter(host string, port, grpcPort uint, logLevel hclog.Level) (*Router,
 		// JSONFormat: true,
 		Mutex: &logLock,
 	})
-
+	if workDir != "" && workDir != "." {
+		if err := os.Chdir(workDir); err != nil {
+			return nil, fmt.Errorf("%s: received error while changing working dir: %w", op, err)
+		}
+	}
 	kctx, kcancel := context.WithCancel(context.Background())
 	ctx, cancel := context.WithCancel(kctx)
 	return &Router{
@@ -254,5 +308,7 @@ func NewRouter(host string, port, grpcPort uint, logLevel hclog.Level) (*Router,
 		KillCancel: kcancel,
 		shutdownCh: MakeShutdownCh(),
 		logger:     logger,
+		cert:       cert,
+		key:        key,
 	}, nil
 }

@@ -2,12 +2,15 @@ package api
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"net/http"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/encoding/protojson"
 
@@ -18,13 +21,29 @@ import (
 	"github.com/kheina/openconman/src/systemd"
 )
 
-func Handler(ctx context.Context, grpcAddr string, logger hclog.Logger) (http.Handler, error) {
+func Handler(ctx context.Context, grpcAddr string, logger hclog.Logger, conf *tls.Config) (http.Handler, error) {
 	const op = "api.Handler"
-	conn, err := grpc.NewClient(
-		grpcAddr,
-		// TODO: update once we implement credentials
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
+	grpcopts := []grpc.DialOption{}
+	name := "conman"
+	if conf == nil {
+		grpcopts = append(grpcopts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	} else {
+		pool := x509.NewCertPool()
+		for _, c := range conf.Certificates {
+			for _, cc := range c.Certificate {
+				parsed, err := x509.ParseCertificate(cc)
+				if err != nil {
+					return nil, fmt.Errorf("%s: failed to parse tls cert: %w", op, err)
+				}
+				pool.AddCert(parsed)
+				name = parsed.Subject.CommonName
+				logger.Debug("cert added to gateway ca pool")
+			}
+		}
+		grpcopts = append(grpcopts, grpc.WithTransportCredentials(credentials.NewClientTLSFromCert(pool, name)))
+	}
+
+	conn, err := grpc.NewClient(grpcAddr, grpcopts...)
 	if err != nil {
 		return nil, fmt.Errorf("%s: failed to dial gRPC server: %w", op, err)
 	}
@@ -40,6 +59,7 @@ func Handler(ctx context.Context, grpcAddr string, logger hclog.Logger) (http.Ha
 		}),
 		runtime.WithErrorHandler(errors.ApiErrorHandler(logger)),
 	)
+
 	// register all the different handlers
 	if err = docker.RegisterContainerHandler(ctx, gwmux, conn); err != nil {
 		return nil, fmt.Errorf("%s: failed to register gateway: %w", op, err)

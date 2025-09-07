@@ -13,6 +13,7 @@ StartLimitIntervalSec=60
 StartLimitBurst=3
 
 [Service]
+WorkingDirectory=/etc/conman.d/
 EnvironmentFile=-/etc/conman.d/conman.env
 User=root
 Group=root

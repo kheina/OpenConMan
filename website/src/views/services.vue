@@ -47,7 +47,7 @@ onUnmounted(() => update.value = clearTimeout(update.value) ?? undefined);
 
 function StartService(u: UnitStatus) {
 	fetch(
-		`http://127.0.0.1:5050/v1/service/enable/${u.name}`
+		`https://127.0.0.1:5050/v1/service/enable/${u.name}`
 	).then(
 		r => r.json()
 	).then((r: { item: UnitStatus }) => {
@@ -62,7 +62,7 @@ function StartService(u: UnitStatus) {
 
 function StopService(u: UnitStatus) {
 	fetch(
-		`http://127.0.0.1:5050/v1/service/disable/${u.name}`
+		`https://127.0.0.1:5050/v1/service/disable/${u.name}`
 	).then(
 		r => r.json()
 	).then((r: { item: UnitStatus }) => {
@@ -78,7 +78,7 @@ function StopService(u: UnitStatus) {
 
 function Updater(): number {
 	fetch(
-		"http://127.0.0.1:5050/v1/services"
+		"https://127.0.0.1:5050/v1/services"
 	).then(
 		r => r.json()
 	).then((r:{ items: UnitStatus[] }) =>
@@ -170,13 +170,16 @@ button {
 	border: var(--border-size) solid var(--border-color);
 	display: inline-block;
 	font-weight: normal;
-	background: var(--bg2);
+	background: var(--bg1);
 	box-sizing: border-box;
 	box-shadow: 0 2px 3px 1px var(--shadowcolor);
 	-webkit-transition: var(--transition) var(--fadetime);
 	-moz-transition: var(--transition) var(--fadetime);
 	-o-transition: var(--transition) var(--fadetime);
 	transition: var(--transition) var(--fadetime);
+}
+.service button {
+	background: var(--bg2);
 }
 button:hover {
 	border-color: var(--borderhover);

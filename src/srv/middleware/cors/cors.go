@@ -117,6 +117,7 @@ func (c *KhCorsMiddleware) WrapHandler(h http.Handler) http.Handler {
 				if err = enc.Encode(err); err != nil {
 					c.logger.Error(fmt.Sprintf("%s: failed to send api error: %s", op, err))
 				}
+				c.logger.Trace(fmt.Sprintf("%s: cors request failed: origin not allowed", op))
 				return
 			}
 
@@ -131,6 +132,7 @@ func (c *KhCorsMiddleware) WrapHandler(h http.Handler) http.Handler {
 				if err = enc.Encode(err); err != nil {
 					c.logger.Error(fmt.Sprintf("%s: failed to send api error: %s", op, err))
 				}
+				c.logger.Trace(fmt.Sprintf("%s: cors request failed: method not allowed", op))
 				return
 			}
 

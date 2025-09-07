@@ -43,7 +43,7 @@ func (v *vueFSWrap) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		// if an error occurs, default to the standard behavior
 	} else {
 		// but if the path doesn't exist, set the path to "/" to return the vue root
-		r.URL.Path = "/index.html"
+		r.URL.Path = "/"
 	}
 	v.fsrv.ServeHTTP(w, r)
 }
