@@ -21,4 +21,6 @@ export interface UnitStatus {
 	job_type: string,
 	// The job object path
 	job_path: string,
+	// The name of the alias, if it exists
+	alias?: string,
 }

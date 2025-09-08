@@ -35,6 +35,7 @@ const (
 
 func allServiceUnitStateStrings() []string {
 	return []string{
+		string(alias),
 		string(dead),
 		string(condition),
 		string(startPre),

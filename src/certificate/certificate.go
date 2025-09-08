@@ -1,13 +1,12 @@
 package certificate
 
 import (
-	"errors"
 	"fmt"
-	"io/fs"
 	"os"
 
 	"github.com/kheina/openconman/src/cli"
 	"github.com/kheina/openconman/src/srv/certs"
+	"github.com/kheina/openconman/src/util"
 )
 
 type Command struct {
@@ -30,22 +29,6 @@ func (c *Command) Args() cli.Args {
 	}
 }
 
-// pathExists returns whether or not the given file path exists as a file or
-// directory
-func pathExists(path string) bool {
-	_, err := os.Stat(path)
-	switch {
-	case err == nil:
-		return true
-	case errors.Is(err, fs.ErrNotExist):
-		return false
-	default:
-		// only occurs when err != nil, but it's not a "does not exist error"
-		// i.e. wtf?
-		return true
-	}
-}
-
 func (c *Command) Run() error {
 	const op = "certificate.(Command).Run"
 	switch {
@@ -57,9 +40,9 @@ func (c *Command) Run() error {
 
 	if !c.force {
 		switch {
-		case pathExists(c.certfile):
+		case util.PathExists(c.certfile):
 			return fmt.Errorf("%s: file already exists at %s", op, c.certfile)
-		case pathExists(c.keyfile):
+		case util.PathExists(c.keyfile):
 			return fmt.Errorf("%s: file already exists at %s", op, c.keyfile)
 		}
 	}

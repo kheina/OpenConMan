@@ -6,22 +6,38 @@
 		<nav>
 			<ol>
 				<li>
-					<div/>
-					<RouterLink to='/'>Dashboard</RouterLink>
+					<div>
+						<div/>
+						<RouterLink to='/'>Dashboard</RouterLink>
+					</div>
 				</li>
 				<li>
-					<div/>
-					<RouterLink to='/containers'>Containers</RouterLink>
-					<i class='material-icons-round'>chevron_left</i>
+					<div>
+						<div/>
+						<RouterLink to='/containers'>Containers</RouterLink>
+						<i class='material-icons-round'>chevron_left</i>
+					</div>
 				</li>
 				<li>
-					<div/>
-					<RouterLink to='/services'>Services</RouterLink>
-					<i class='material-icons-round'>chevron_left</i>
+					<div>
+						<div/>
+						<RouterLink to='/services'>Services</RouterLink>
+						<i class='material-icons-round'>chevron_left</i>
+					</div>
+					<ol>
+						<li>
+							<div>
+								<div/>
+								<RouterLink to='/services/all'>All Services</RouterLink>
+							</div>
+						</li>
+					</ol>
 				</li>
 				<li>
-					<div/>
-					<RouterLink to='/test'>test</RouterLink>
+					<div>
+						<div/>
+						<RouterLink to='/test'>test</RouterLink>
+					</div>
 				</li>
 			</ol>
 		</nav>
@@ -65,7 +81,7 @@ body {
 nav {
 	width: 100%;
 }
-nav li {
+nav li > div {
 	display: flex;
 	height: 2.5em;
 	align-items: center;
@@ -80,8 +96,8 @@ nav a {
 	flex-grow: 1;
 	position: relative;
 }
-nav li > :first-child {
-	width: 5px;
+nav li > div > :first-child {
+	width: 0.25em;
 	height: 0;
 	background: var(--interact);
 	-webkit-transition: var(--transition) var(--fadetime);
@@ -91,7 +107,7 @@ nav li > :first-child {
 	overflow: hidden;
 	position: absolute;
 }
-nav li > i {
+nav li div > i {
 	position: absolute;
 	right: 0;
 	pointer-events: none;
@@ -101,16 +117,28 @@ nav li > i {
 	-o-transition: var(--transition) var(--fadetime);
 	transition: var(--transition) var(--fadetime);
 }
+nav li > ol {
+	max-height: 0;
+	overflow: hidden;
+	-webkit-transition: var(--transition) var(--fadetime);
+	-moz-transition: var(--transition) var(--fadetime);
+	-o-transition: var(--transition) var(--fadetime);
+	transition: var(--transition) var(--fadetime);
+	a {
+		padding-left: calc(var(--margin) * 2);
+	}
+}
 nav li:has(a.router-link-active) {
-	&> i {
+	& i {
 		transform: rotate(-90deg);
 	}
 	&> ol {
-		height: auto;
+		/* idk how to make this animate */
+		max-height: unset;
 	}
 }
-nav:not(:has(a:hover)) li:has(a.router-link-active) > div,
-nav li:has(a:hover) > div{
-	height: 100%;
+nav:not(:has(a:hover)) li div:has(a.router-link-active) > :first-child,
+nav li div:has(a:hover) > :first-child {
+	height: 2.5em;
 }
 </style>

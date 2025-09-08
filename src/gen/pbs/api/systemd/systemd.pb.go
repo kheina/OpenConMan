@@ -44,7 +44,9 @@ type UnitStatus struct {
 	// The job type as string
 	JobType string `protobuf:"bytes,90,opt,name=job_type,json=jobType,proto3" json:"job_type,omitempty"`
 	// The job object path
-	JobPath       string `protobuf:"bytes,100,opt,name=job_path,json=jobPath,proto3" json:"job_path,omitempty"`
+	JobPath string `protobuf:"bytes,100,opt,name=job_path,json=jobPath,proto3" json:"job_path,omitempty"`
+	// The name of the alias, if it exists
+	Alias         *string `protobuf:"bytes,110,opt,name=alias,proto3,oneof" json:"alias,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -149,11 +151,18 @@ func (x *UnitStatus) GetJobPath() string {
 	return ""
 }
 
+func (x *UnitStatus) GetAlias() string {
+	if x != nil && x.Alias != nil {
+		return *x.Alias
+	}
+	return ""
+}
+
 var File_services_pbs_api_systemd_proto protoreflect.FileDescriptor
 
 const file_services_pbs_api_systemd_proto_rawDesc = "" +
 	"\n" +
-	"\x1eservices/pbs/api/systemd.proto\x12\x19server.api.pbs.v1.systemd\"\x9e\x02\n" +
+	"\x1eservices/pbs/api/systemd.proto\x12\x19server.api.pbs.v1.systemd\"\xc3\x02\n" +
 	"\n" +
 	"UnitStatus\x12\x12\n" +
 	"\x04name\x18\n" +
@@ -167,7 +176,9 @@ const file_services_pbs_api_systemd_proto_rawDesc = "" +
 	"\x04path\x18F \x01(\tR\x04path\x12\x15\n" +
 	"\x06job_id\x18P \x01(\rR\x05jobId\x12\x19\n" +
 	"\bjob_type\x18Z \x01(\tR\ajobType\x12\x19\n" +
-	"\bjob_path\x18d \x01(\tR\ajobPathB>Z<github.com/kheina/openconman/src/gen/pbs/api/systemd;systemdb\x06proto3"
+	"\bjob_path\x18d \x01(\tR\ajobPath\x12\x19\n" +
+	"\x05alias\x18n \x01(\tH\x00R\x05alias\x88\x01\x01B\b\n" +
+	"\x06_aliasB>Z<github.com/kheina/openconman/src/gen/pbs/api/systemd;systemdb\x06proto3"
 
 var (
 	file_services_pbs_api_systemd_proto_rawDescOnce sync.Once
@@ -198,6 +209,7 @@ func file_services_pbs_api_systemd_proto_init() {
 	if File_services_pbs_api_systemd_proto != nil {
 		return
 	}
+	file_services_pbs_api_systemd_proto_msgTypes[0].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

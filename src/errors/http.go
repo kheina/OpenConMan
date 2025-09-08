@@ -2,6 +2,19 @@ package errors
 
 import "google.golang.org/grpc/codes"
 
+type Status uint32
+
+const (
+	BadRequest Status = 400
+	Conflict          = 409
+
+	Internal = 500
+)
+
+func (s Status) String() string {
+	return httpStatusToErrorCode(uint32(s))
+}
+
 func httpStatusToErrorCode(status uint32) string {
 	switch status {
 	case 100:

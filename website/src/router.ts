@@ -19,6 +19,11 @@ export default createRouter({
 			name: 'services',
 			component: () => import("@/views/services.vue"),
 		},
+		{
+			path: '/services/all',
+			name: 'all services',
+			component: () => import("@/views/all_services.vue"),
+		},
 
 		// test view
 		{

@@ -193,6 +193,274 @@ func (x *GetEnableServiceResponse) GetItem() *systemd.UnitStatus {
 	return nil
 }
 
+type PutServiceAliasRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The primary unit name as string
+	Name          string `protobuf:"bytes,10,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PutServiceAliasRequest) Reset() {
+	*x = PutServiceAliasRequest{}
+	mi := &file_services_srv_api_systemd_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PutServiceAliasRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PutServiceAliasRequest) ProtoMessage() {}
+
+func (x *PutServiceAliasRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_services_srv_api_systemd_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PutServiceAliasRequest.ProtoReflect.Descriptor instead.
+func (*PutServiceAliasRequest) Descriptor() ([]byte, []int) {
+	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *PutServiceAliasRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+type PutServiceAliasResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Item          *systemd.UnitStatus    `protobuf:"bytes,10,opt,name=item,proto3" json:"item,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PutServiceAliasResponse) Reset() {
+	*x = PutServiceAliasResponse{}
+	mi := &file_services_srv_api_systemd_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PutServiceAliasResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PutServiceAliasResponse) ProtoMessage() {}
+
+func (x *PutServiceAliasResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_services_srv_api_systemd_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PutServiceAliasResponse.ProtoReflect.Descriptor instead.
+func (*PutServiceAliasResponse) Descriptor() ([]byte, []int) {
+	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *PutServiceAliasResponse) GetItem() *systemd.UnitStatus {
+	if x != nil {
+		return x.Item
+	}
+	return nil
+}
+
+type DeleteServiceRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The primary unit name as string
+	Name          string `protobuf:"bytes,10,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteServiceRequest) Reset() {
+	*x = DeleteServiceRequest{}
+	mi := &file_services_srv_api_systemd_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteServiceRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteServiceRequest) ProtoMessage() {}
+
+func (x *DeleteServiceRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_services_srv_api_systemd_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteServiceRequest.ProtoReflect.Descriptor instead.
+func (*DeleteServiceRequest) Descriptor() ([]byte, []int) {
+	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *DeleteServiceRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+type DeleteServiceResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteServiceResponse) Reset() {
+	*x = DeleteServiceResponse{}
+	mi := &file_services_srv_api_systemd_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteServiceResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteServiceResponse) ProtoMessage() {}
+
+func (x *DeleteServiceResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_services_srv_api_systemd_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteServiceResponse.ProtoReflect.Descriptor instead.
+func (*DeleteServiceResponse) Descriptor() ([]byte, []int) {
+	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{7}
+}
+
+type PutServiceRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The primary unit name as string
+	Name string `protobuf:"bytes,10,opt,name=name,proto3" json:"name,omitempty"`
+	// The contents of the file to be created
+	Content       string `protobuf:"bytes,20,opt,name=content,proto3" json:"content,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PutServiceRequest) Reset() {
+	*x = PutServiceRequest{}
+	mi := &file_services_srv_api_systemd_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PutServiceRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PutServiceRequest) ProtoMessage() {}
+
+func (x *PutServiceRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_services_srv_api_systemd_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PutServiceRequest.ProtoReflect.Descriptor instead.
+func (*PutServiceRequest) Descriptor() ([]byte, []int) {
+	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *PutServiceRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *PutServiceRequest) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
+type PutServiceResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Item          *systemd.UnitStatus    `protobuf:"bytes,10,opt,name=item,proto3" json:"item,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PutServiceResponse) Reset() {
+	*x = PutServiceResponse{}
+	mi := &file_services_srv_api_systemd_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PutServiceResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PutServiceResponse) ProtoMessage() {}
+
+func (x *PutServiceResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_services_srv_api_systemd_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PutServiceResponse.ProtoReflect.Descriptor instead.
+func (*PutServiceResponse) Descriptor() ([]byte, []int) {
+	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *PutServiceResponse) GetItem() *systemd.UnitStatus {
+	if x != nil {
+		return x.Item
+	}
+	return nil
+}
+
 var File_services_srv_api_systemd_proto protoreflect.FileDescriptor
 
 const file_services_srv_api_systemd_proto_rawDesc = "" +
@@ -207,9 +475,32 @@ const file_services_srv_api_systemd_proto_rawDesc = "" +
 	" \x01(\tR\x04name\"U\n" +
 	"\x18GetEnableServiceResponse\x129\n" +
 	"\x04item\x18\n" +
-	" \x01(\v2%.server.api.pbs.v1.systemd.UnitStatusR\x04item2\xe6\x03\n" +
+	" \x01(\v2%.server.api.pbs.v1.systemd.UnitStatusR\x04item\",\n" +
+	"\x16PutServiceAliasRequest\x12\x12\n" +
+	"\x04name\x18\n" +
+	" \x01(\tR\x04name\"T\n" +
+	"\x17PutServiceAliasResponse\x129\n" +
+	"\x04item\x18\n" +
+	" \x01(\v2%.server.api.pbs.v1.systemd.UnitStatusR\x04item\"*\n" +
+	"\x14DeleteServiceRequest\x12\x12\n" +
+	"\x04name\x18\n" +
+	" \x01(\tR\x04name\"\x17\n" +
+	"\x15DeleteServiceResponse\"A\n" +
+	"\x11PutServiceRequest\x12\x12\n" +
+	"\x04name\x18\n" +
+	" \x01(\tR\x04name\x12\x18\n" +
+	"\acontent\x18\x14 \x01(\tR\acontent\"O\n" +
+	"\x12PutServiceResponse\x129\n" +
+	"\x04item\x18\n" +
+	" \x01(\v2%.server.api.pbs.v1.systemd.UnitStatusR\x04item2\xae\t\n" +
 	"\aSystemd\x12\x89\x01\n" +
-	"\fListServices\x120.server.api.systemd.v1.GetServiceStatusesRequest\x1a1.server.api.systemd.v1.GetServiceStatusesResponse\"\x14\x82\xd3\xe4\x93\x02\x0e\x12\f/v1/services\x12\x93\x01\n" +
+	"\fListServices\x120.server.api.systemd.v1.GetServiceStatusesRequest\x1a1.server.api.systemd.v1.GetServiceStatusesResponse\"\x14\x82\xd3\xe4\x93\x02\x0e\x12\f/v1/services\x12\x90\x01\n" +
+	"\x0fListAllServices\x120.server.api.systemd.v1.GetServiceStatusesRequest\x1a1.server.api.systemd.v1.GetServiceStatusesResponse\"\x18\x82\xd3\xe4\x93\x02\x12\x12\x10/v1/services/all\x12\x94\x01\n" +
+	"\x0fPutServiceAlias\x12-.server.api.systemd.v1.PutServiceAliasRequest\x1a..server.api.systemd.v1.PutServiceAliasResponse\"\"\x82\xd3\xe4\x93\x02\x1c:\x01*b\x04item\x1a\x11/v1/service/alias\x12\x91\x01\n" +
+	"\x12DeleteServiceAlias\x12+.server.api.systemd.v1.DeleteServiceRequest\x1a,.server.api.systemd.v1.DeleteServiceResponse\" \x82\xd3\xe4\x93\x02\x1a*\x18/v1/service/alias/{name}\x12\x7f\n" +
+	"\n" +
+	"PutService\x12(.server.api.systemd.v1.PutServiceRequest\x1a).server.api.systemd.v1.PutServiceResponse\"\x1c\x82\xd3\xe4\x93\x02\x16:\x01*b\x04item\x1a\v/v1/service\x12\x86\x01\n" +
+	"\rDeleteService\x12+.server.api.systemd.v1.DeleteServiceRequest\x1a,.server.api.systemd.v1.DeleteServiceResponse\"\x1a\x82\xd3\xe4\x93\x02\x14*\x12/v1/service/{name}\x12\x93\x01\n" +
 	"\rEnableService\x12..server.api.systemd.v1.GetEnableServiceRequest\x1a/.server.api.systemd.v1.GetEnableServiceResponse\"!\x82\xd3\xe4\x93\x02\x1b\x12\x19/v1/service/enable/{name}\x12\x95\x01\n" +
 	"\x0eDisableService\x12..server.api.systemd.v1.GetEnableServiceRequest\x1a/.server.api.systemd.v1.GetEnableServiceResponse\"\"\x82\xd3\xe4\x93\x02\x1c\x12\x1a/v1/service/disable/{name}\x1a!\x92A\x1e\n" +
 	"\x0fSystemd Service\x12\vdescriptionB>Z<github.com/kheina/openconman/src/gen/srv/api/systemd;systemdb\x06proto3"
@@ -226,28 +517,46 @@ func file_services_srv_api_systemd_proto_rawDescGZIP() []byte {
 	return file_services_srv_api_systemd_proto_rawDescData
 }
 
-var file_services_srv_api_systemd_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_services_srv_api_systemd_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_services_srv_api_systemd_proto_goTypes = []any{
 	(*GetServiceStatusesRequest)(nil),  // 0: server.api.systemd.v1.GetServiceStatusesRequest
 	(*GetServiceStatusesResponse)(nil), // 1: server.api.systemd.v1.GetServiceStatusesResponse
 	(*GetEnableServiceRequest)(nil),    // 2: server.api.systemd.v1.GetEnableServiceRequest
 	(*GetEnableServiceResponse)(nil),   // 3: server.api.systemd.v1.GetEnableServiceResponse
-	(*systemd.UnitStatus)(nil),         // 4: server.api.pbs.v1.systemd.UnitStatus
+	(*PutServiceAliasRequest)(nil),     // 4: server.api.systemd.v1.PutServiceAliasRequest
+	(*PutServiceAliasResponse)(nil),    // 5: server.api.systemd.v1.PutServiceAliasResponse
+	(*DeleteServiceRequest)(nil),       // 6: server.api.systemd.v1.DeleteServiceRequest
+	(*DeleteServiceResponse)(nil),      // 7: server.api.systemd.v1.DeleteServiceResponse
+	(*PutServiceRequest)(nil),          // 8: server.api.systemd.v1.PutServiceRequest
+	(*PutServiceResponse)(nil),         // 9: server.api.systemd.v1.PutServiceResponse
+	(*systemd.UnitStatus)(nil),         // 10: server.api.pbs.v1.systemd.UnitStatus
 }
 var file_services_srv_api_systemd_proto_depIdxs = []int32{
-	4, // 0: server.api.systemd.v1.GetServiceStatusesResponse.items:type_name -> server.api.pbs.v1.systemd.UnitStatus
-	4, // 1: server.api.systemd.v1.GetEnableServiceResponse.item:type_name -> server.api.pbs.v1.systemd.UnitStatus
-	0, // 2: server.api.systemd.v1.Systemd.ListServices:input_type -> server.api.systemd.v1.GetServiceStatusesRequest
-	2, // 3: server.api.systemd.v1.Systemd.EnableService:input_type -> server.api.systemd.v1.GetEnableServiceRequest
-	2, // 4: server.api.systemd.v1.Systemd.DisableService:input_type -> server.api.systemd.v1.GetEnableServiceRequest
-	1, // 5: server.api.systemd.v1.Systemd.ListServices:output_type -> server.api.systemd.v1.GetServiceStatusesResponse
-	3, // 6: server.api.systemd.v1.Systemd.EnableService:output_type -> server.api.systemd.v1.GetEnableServiceResponse
-	3, // 7: server.api.systemd.v1.Systemd.DisableService:output_type -> server.api.systemd.v1.GetEnableServiceResponse
-	5, // [5:8] is the sub-list for method output_type
-	2, // [2:5] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	10, // 0: server.api.systemd.v1.GetServiceStatusesResponse.items:type_name -> server.api.pbs.v1.systemd.UnitStatus
+	10, // 1: server.api.systemd.v1.GetEnableServiceResponse.item:type_name -> server.api.pbs.v1.systemd.UnitStatus
+	10, // 2: server.api.systemd.v1.PutServiceAliasResponse.item:type_name -> server.api.pbs.v1.systemd.UnitStatus
+	10, // 3: server.api.systemd.v1.PutServiceResponse.item:type_name -> server.api.pbs.v1.systemd.UnitStatus
+	0,  // 4: server.api.systemd.v1.Systemd.ListServices:input_type -> server.api.systemd.v1.GetServiceStatusesRequest
+	0,  // 5: server.api.systemd.v1.Systemd.ListAllServices:input_type -> server.api.systemd.v1.GetServiceStatusesRequest
+	4,  // 6: server.api.systemd.v1.Systemd.PutServiceAlias:input_type -> server.api.systemd.v1.PutServiceAliasRequest
+	6,  // 7: server.api.systemd.v1.Systemd.DeleteServiceAlias:input_type -> server.api.systemd.v1.DeleteServiceRequest
+	8,  // 8: server.api.systemd.v1.Systemd.PutService:input_type -> server.api.systemd.v1.PutServiceRequest
+	6,  // 9: server.api.systemd.v1.Systemd.DeleteService:input_type -> server.api.systemd.v1.DeleteServiceRequest
+	2,  // 10: server.api.systemd.v1.Systemd.EnableService:input_type -> server.api.systemd.v1.GetEnableServiceRequest
+	2,  // 11: server.api.systemd.v1.Systemd.DisableService:input_type -> server.api.systemd.v1.GetEnableServiceRequest
+	1,  // 12: server.api.systemd.v1.Systemd.ListServices:output_type -> server.api.systemd.v1.GetServiceStatusesResponse
+	1,  // 13: server.api.systemd.v1.Systemd.ListAllServices:output_type -> server.api.systemd.v1.GetServiceStatusesResponse
+	5,  // 14: server.api.systemd.v1.Systemd.PutServiceAlias:output_type -> server.api.systemd.v1.PutServiceAliasResponse
+	7,  // 15: server.api.systemd.v1.Systemd.DeleteServiceAlias:output_type -> server.api.systemd.v1.DeleteServiceResponse
+	9,  // 16: server.api.systemd.v1.Systemd.PutService:output_type -> server.api.systemd.v1.PutServiceResponse
+	7,  // 17: server.api.systemd.v1.Systemd.DeleteService:output_type -> server.api.systemd.v1.DeleteServiceResponse
+	3,  // 18: server.api.systemd.v1.Systemd.EnableService:output_type -> server.api.systemd.v1.GetEnableServiceResponse
+	3,  // 19: server.api.systemd.v1.Systemd.DisableService:output_type -> server.api.systemd.v1.GetEnableServiceResponse
+	12, // [12:20] is the sub-list for method output_type
+	4,  // [4:12] is the sub-list for method input_type
+	4,  // [4:4] is the sub-list for extension type_name
+	4,  // [4:4] is the sub-list for extension extendee
+	0,  // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_services_srv_api_systemd_proto_init() }
@@ -261,7 +570,7 @@ func file_services_srv_api_systemd_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_services_srv_api_systemd_proto_rawDesc), len(file_services_srv_api_systemd_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

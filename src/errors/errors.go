@@ -37,11 +37,11 @@ func (e *ApiError) GRPCStatus() *status.Status {
 }
 
 // New returns a new *ApiError in the stdlib error interface
-func New(status uint32, op, msg string, opt ...Option) error {
+func New(status Status, op, msg string, opt ...Option) error {
 	opts := getOpts(opt...)
 
 	if opts.withErrorCode == "" {
-		opts.withErrorCode = httpStatusToErrorCode(status)
+		opts.withErrorCode = status.String()
 	}
 
 	guid := uuid.New()
@@ -50,7 +50,7 @@ func New(status uint32, op, msg string, opt ...Option) error {
 
 	return &ApiError{
 		&pb.ApiError{
-			Status:  status,
+			Status:  uint32(status),
 			Code:    opts.withErrorCode,
 			Message: fmt.Sprintf("%s: %s", op, msg),
 			Refid:   string(dst),

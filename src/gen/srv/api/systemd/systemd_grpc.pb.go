@@ -19,9 +19,14 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Systemd_ListServices_FullMethodName   = "/server.api.systemd.v1.Systemd/ListServices"
-	Systemd_EnableService_FullMethodName  = "/server.api.systemd.v1.Systemd/EnableService"
-	Systemd_DisableService_FullMethodName = "/server.api.systemd.v1.Systemd/DisableService"
+	Systemd_ListServices_FullMethodName       = "/server.api.systemd.v1.Systemd/ListServices"
+	Systemd_ListAllServices_FullMethodName    = "/server.api.systemd.v1.Systemd/ListAllServices"
+	Systemd_PutServiceAlias_FullMethodName    = "/server.api.systemd.v1.Systemd/PutServiceAlias"
+	Systemd_DeleteServiceAlias_FullMethodName = "/server.api.systemd.v1.Systemd/DeleteServiceAlias"
+	Systemd_PutService_FullMethodName         = "/server.api.systemd.v1.Systemd/PutService"
+	Systemd_DeleteService_FullMethodName      = "/server.api.systemd.v1.Systemd/DeleteService"
+	Systemd_EnableService_FullMethodName      = "/server.api.systemd.v1.Systemd/EnableService"
+	Systemd_DisableService_FullMethodName     = "/server.api.systemd.v1.Systemd/DisableService"
 )
 
 // SystemdClient is the client API for Systemd service.
@@ -29,6 +34,11 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SystemdClient interface {
 	ListServices(ctx context.Context, in *GetServiceStatusesRequest, opts ...grpc.CallOption) (*GetServiceStatusesResponse, error)
+	ListAllServices(ctx context.Context, in *GetServiceStatusesRequest, opts ...grpc.CallOption) (*GetServiceStatusesResponse, error)
+	PutServiceAlias(ctx context.Context, in *PutServiceAliasRequest, opts ...grpc.CallOption) (*PutServiceAliasResponse, error)
+	DeleteServiceAlias(ctx context.Context, in *DeleteServiceRequest, opts ...grpc.CallOption) (*DeleteServiceResponse, error)
+	PutService(ctx context.Context, in *PutServiceRequest, opts ...grpc.CallOption) (*PutServiceResponse, error)
+	DeleteService(ctx context.Context, in *DeleteServiceRequest, opts ...grpc.CallOption) (*DeleteServiceResponse, error)
 	EnableService(ctx context.Context, in *GetEnableServiceRequest, opts ...grpc.CallOption) (*GetEnableServiceResponse, error)
 	DisableService(ctx context.Context, in *GetEnableServiceRequest, opts ...grpc.CallOption) (*GetEnableServiceResponse, error)
 }
@@ -45,6 +55,56 @@ func (c *systemdClient) ListServices(ctx context.Context, in *GetServiceStatuses
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetServiceStatusesResponse)
 	err := c.cc.Invoke(ctx, Systemd_ListServices_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemdClient) ListAllServices(ctx context.Context, in *GetServiceStatusesRequest, opts ...grpc.CallOption) (*GetServiceStatusesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetServiceStatusesResponse)
+	err := c.cc.Invoke(ctx, Systemd_ListAllServices_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemdClient) PutServiceAlias(ctx context.Context, in *PutServiceAliasRequest, opts ...grpc.CallOption) (*PutServiceAliasResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PutServiceAliasResponse)
+	err := c.cc.Invoke(ctx, Systemd_PutServiceAlias_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemdClient) DeleteServiceAlias(ctx context.Context, in *DeleteServiceRequest, opts ...grpc.CallOption) (*DeleteServiceResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteServiceResponse)
+	err := c.cc.Invoke(ctx, Systemd_DeleteServiceAlias_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemdClient) PutService(ctx context.Context, in *PutServiceRequest, opts ...grpc.CallOption) (*PutServiceResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PutServiceResponse)
+	err := c.cc.Invoke(ctx, Systemd_PutService_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *systemdClient) DeleteService(ctx context.Context, in *DeleteServiceRequest, opts ...grpc.CallOption) (*DeleteServiceResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteServiceResponse)
+	err := c.cc.Invoke(ctx, Systemd_DeleteService_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -76,6 +136,11 @@ func (c *systemdClient) DisableService(ctx context.Context, in *GetEnableService
 // for forward compatibility.
 type SystemdServer interface {
 	ListServices(context.Context, *GetServiceStatusesRequest) (*GetServiceStatusesResponse, error)
+	ListAllServices(context.Context, *GetServiceStatusesRequest) (*GetServiceStatusesResponse, error)
+	PutServiceAlias(context.Context, *PutServiceAliasRequest) (*PutServiceAliasResponse, error)
+	DeleteServiceAlias(context.Context, *DeleteServiceRequest) (*DeleteServiceResponse, error)
+	PutService(context.Context, *PutServiceRequest) (*PutServiceResponse, error)
+	DeleteService(context.Context, *DeleteServiceRequest) (*DeleteServiceResponse, error)
 	EnableService(context.Context, *GetEnableServiceRequest) (*GetEnableServiceResponse, error)
 	DisableService(context.Context, *GetEnableServiceRequest) (*GetEnableServiceResponse, error)
 	mustEmbedUnimplementedSystemdServer()
@@ -90,6 +155,21 @@ type UnimplementedSystemdServer struct{}
 
 func (UnimplementedSystemdServer) ListServices(context.Context, *GetServiceStatusesRequest) (*GetServiceStatusesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListServices not implemented")
+}
+func (UnimplementedSystemdServer) ListAllServices(context.Context, *GetServiceStatusesRequest) (*GetServiceStatusesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAllServices not implemented")
+}
+func (UnimplementedSystemdServer) PutServiceAlias(context.Context, *PutServiceAliasRequest) (*PutServiceAliasResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PutServiceAlias not implemented")
+}
+func (UnimplementedSystemdServer) DeleteServiceAlias(context.Context, *DeleteServiceRequest) (*DeleteServiceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteServiceAlias not implemented")
+}
+func (UnimplementedSystemdServer) PutService(context.Context, *PutServiceRequest) (*PutServiceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PutService not implemented")
+}
+func (UnimplementedSystemdServer) DeleteService(context.Context, *DeleteServiceRequest) (*DeleteServiceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteService not implemented")
 }
 func (UnimplementedSystemdServer) EnableService(context.Context, *GetEnableServiceRequest) (*GetEnableServiceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EnableService not implemented")
@@ -132,6 +212,96 @@ func _Systemd_ListServices_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(SystemdServer).ListServices(ctx, req.(*GetServiceStatusesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Systemd_ListAllServices_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetServiceStatusesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemdServer).ListAllServices(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Systemd_ListAllServices_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemdServer).ListAllServices(ctx, req.(*GetServiceStatusesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Systemd_PutServiceAlias_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PutServiceAliasRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemdServer).PutServiceAlias(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Systemd_PutServiceAlias_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemdServer).PutServiceAlias(ctx, req.(*PutServiceAliasRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Systemd_DeleteServiceAlias_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteServiceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemdServer).DeleteServiceAlias(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Systemd_DeleteServiceAlias_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemdServer).DeleteServiceAlias(ctx, req.(*DeleteServiceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Systemd_PutService_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PutServiceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemdServer).PutService(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Systemd_PutService_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemdServer).PutService(ctx, req.(*PutServiceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Systemd_DeleteService_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteServiceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemdServer).DeleteService(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Systemd_DeleteService_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemdServer).DeleteService(ctx, req.(*DeleteServiceRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -182,6 +352,26 @@ var Systemd_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListServices",
 			Handler:    _Systemd_ListServices_Handler,
+		},
+		{
+			MethodName: "ListAllServices",
+			Handler:    _Systemd_ListAllServices_Handler,
+		},
+		{
+			MethodName: "PutServiceAlias",
+			Handler:    _Systemd_PutServiceAlias_Handler,
+		},
+		{
+			MethodName: "DeleteServiceAlias",
+			Handler:    _Systemd_DeleteServiceAlias_Handler,
+		},
+		{
+			MethodName: "PutService",
+			Handler:    _Systemd_PutService_Handler,
+		},
+		{
+			MethodName: "DeleteService",
+			Handler:    _Systemd_DeleteService_Handler,
 		},
 		{
 			MethodName: "EnableService",

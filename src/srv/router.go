@@ -33,8 +33,9 @@ type Router struct {
 	shutdownCh chan struct{}
 	logger     hclog.Logger
 
-	cert []byte
-	key  []byte
+	insecure bool
+	cert     []byte
+	key      []byte
 
 	// cancelling the Serve context triggers a graceful shutdown
 	SrvCancel context.CancelFunc
@@ -143,38 +144,40 @@ func (r *Router) Serve() error {
 
 	var conf *tls.Config
 	grpco := []grpc.ServerOption{}
-	switch {
-	case r.cert == nil && r.key != nil:
-		fallthrough
-	case r.cert != nil && r.key == nil:
-		return fmt.Errorf("%s: tls cert or key provided, but not both", op)
-	case r.cert != nil && r.key != nil:
-		// valid, load the certs below
-	default:
-		r.cert, r.key, err = certs.GenerateCertificate()
-		if err != nil {
-			return fmt.Errorf("%s: failed to generate tls cert: %w", op, err)
+	if !r.insecure {
+		switch {
+		case r.cert == nil && r.key != nil:
+			fallthrough
+		case r.cert != nil && r.key == nil:
+			return fmt.Errorf("%s: tls cert or key provided, but not both", op)
+		case r.cert != nil && r.key != nil:
+			// valid, load the certs below
+		default:
+			r.cert, r.key, err = certs.GenerateCertificate()
+			if err != nil {
+				return fmt.Errorf("%s: failed to generate tls cert: %w", op, err)
+			}
+			r.logger.Debug("TLS certificate generated")
 		}
-		r.logger.Debug("TLS certificate generated")
-	}
 
-	cert, err := tls.X509KeyPair(r.cert, r.key)
-	if err != nil {
-		return fmt.Errorf("%s: failed to parse tls cert and key: %w", op, err)
-	}
-	r.logger.Debug("TLS certificate loaded")
+		cert, err := tls.X509KeyPair(r.cert, r.key)
+		if err != nil {
+			return fmt.Errorf("%s: failed to parse tls cert and key: %w", op, err)
+		}
+		r.logger.Debug("TLS certificate loaded")
 
-	conf = &tls.Config{
-		ServerName:   "conman", // this may need to be updated to a dns name or something
-		NextProtos:   []string{"h2", "http/1.1"},
-		ClientAuth:   tls.RequestClientCert,
-		Certificates: []tls.Certificate{cert},
-	}
+		conf = &tls.Config{
+			ServerName:   "conman", // this may need to be updated to a dns name or something
+			NextProtos:   []string{"h2", "http/1.1"},
+			ClientAuth:   tls.RequestClientCert,
+			Certificates: []tls.Certificate{cert},
+		}
 
-	// don't convert the grpc listener, as it's handled internally by grpc.Server
-	// r.grpcListener = tls.NewListener(r.grpcListener, conf)
-	r.httpListener = tls.NewListener(r.httpListener, conf)
-	grpco = append(grpco, grpc.Creds(credentials.NewTLS(conf)))
+		// don't convert the grpc listener, as it's handled internally by grpc.Server
+		// r.grpcListener = tls.NewListener(r.grpcListener, conf)
+		r.httpListener = tls.NewListener(r.httpListener, conf)
+		grpco = append(grpco, grpc.Creds(credentials.NewTLS(conf)))
+	}
 
 	ctx := r.srvCtx
 	r.grpcServer = grpc.NewServer(grpco...)
@@ -283,7 +286,7 @@ shutdown:
 	}
 }
 
-func NewRouter(host string, port, grpcPort uint, workDir string, logLevel hclog.Level, cert, key []byte) (*Router, error) {
+func NewRouter(host string, port, grpcPort uint, workDir string, logLevel hclog.Level, cert, key []byte, insecure bool) (*Router, error) {
 	const op = "srv.NewRouter"
 	var logLock sync.Mutex
 	logger := hclog.New(&hclog.LoggerOptions{
@@ -292,7 +295,7 @@ func NewRouter(host string, port, grpcPort uint, workDir string, logLevel hclog.
 		// JSONFormat: true,
 		Mutex: &logLock,
 	})
-	if workDir != "" && workDir != "." {
+	if workDir != "" {
 		if err := os.Chdir(workDir); err != nil {
 			return nil, fmt.Errorf("%s: received error while changing working dir: %w", op, err)
 		}
@@ -310,5 +313,6 @@ func NewRouter(host string, port, grpcPort uint, workDir string, logLevel hclog.
 		logger:     logger,
 		cert:       cert,
 		key:        key,
+		insecure:   insecure,
 	}, nil
 }

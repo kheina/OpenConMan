@@ -21,6 +21,42 @@ service Systemd {
     };
   }
 
+  rpc ListAllServices(GetServiceStatusesRequest)
+      returns (GetServiceStatusesResponse) {
+    option (google.api.http) = {
+      get: "/v1/services/all"
+    };
+  }
+
+  rpc PutServiceAlias(PutServiceAliasRequest)
+      returns (PutServiceAliasResponse) {
+    option (google.api.http) = {
+      put: "/v1/service/alias"
+      body: "*"
+      response_body: "item"
+    };
+  }
+
+  rpc DeleteServiceAlias(DeleteServiceRequest) returns (DeleteServiceResponse) {
+    option (google.api.http) = {
+      delete: "/v1/service/alias/{name}"
+    };
+  }
+
+  rpc PutService(PutServiceRequest) returns (PutServiceResponse) {
+    option (google.api.http) = {
+      put: "/v1/service"
+      body: "*"
+      response_body: "item"
+    };
+  }
+
+  rpc DeleteService(DeleteServiceRequest) returns (DeleteServiceResponse) {
+    option (google.api.http) = {
+      delete: "/v1/service/{name}"
+    };
+  }
+
   rpc EnableService(GetEnableServiceRequest)
       returns (GetEnableServiceResponse) {
     option (google.api.http) = {
@@ -48,5 +84,32 @@ message GetEnableServiceRequest {
 }
 
 message GetEnableServiceResponse {
+  server.api.pbs.v1.systemd.UnitStatus item = 10;
+}
+
+message PutServiceAliasRequest {
+  // The primary unit name as string
+  string name = 10;
+}
+
+message PutServiceAliasResponse {
+  server.api.pbs.v1.systemd.UnitStatus item = 10;
+}
+
+message DeleteServiceRequest {
+  // The primary unit name as string
+  string name = 10;
+}
+
+message DeleteServiceResponse {}
+
+message PutServiceRequest {
+  // The primary unit name as string
+  string name = 10;
+  // The contents of the file to be created
+  string content = 20;
+}
+
+message PutServiceResponse {
   server.api.pbs.v1.systemd.UnitStatus item = 10;
 }

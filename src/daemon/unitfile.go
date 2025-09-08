@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/kheina/openconman/src/util"
 )
 
 const unitfiletemplate = `[Unit]
@@ -14,7 +16,7 @@ StartLimitBurst=3
 
 [Service]
 WorkingDirectory=/etc/conman.d/
-EnvironmentFile=-/etc/conman.d/conman.env
+EnvironmentFile=/etc/conman.d/conman.env
 User=root
 Group=root
 ExecStart=%s serve %s
@@ -29,6 +31,8 @@ LimitMEMLOCK=infinity
 [Install]
 WantedBy=multi-user.target
 `
+const workingDirectory = "/etc/conman.d/"
+const environmentFile = "/etc/conman.d/conman.env"
 
 func newUnitFile(exe, filename string, args []string) error {
 	contents := fmt.Sprintf(unitfiletemplate, exe, strings.Join(args, " "))
@@ -36,9 +40,22 @@ func newUnitFile(exe, filename string, args []string) error {
 	// w = 010b = 2
 	// x = 001b = 1
 	// 644 == -rw-r--r--
-	return os.WriteFile(fmt.Sprintf("/usr/lib/systemd/system/%s", filename), []byte(contents), 644)
+	if err := os.WriteFile(fmt.Sprintf("/etc/systemd/system/%s", filename), []byte(contents), 644); err != nil {
+		return err
+	}
+	if !util.PathExists(workingDirectory) {
+		if err := os.Mkdir(workingDirectory, 644); err != nil {
+			return err
+		}
+	}
+	if !util.PathExists(environmentFile) {
+		if err := os.WriteFile(environmentFile, []byte{}, 644); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func deleteUnitFile(filename string) error {
-	return os.Remove(fmt.Sprintf("/usr/lib/systemd/system/%s", filename))
+	return os.Remove(fmt.Sprintf("/etc/systemd/system/%s", filename))
 }

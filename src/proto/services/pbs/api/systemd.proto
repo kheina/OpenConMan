@@ -27,4 +27,6 @@ message UnitStatus {
   string job_type = 90;
   // The job object path
   string job_path = 100;
+  // The name of the alias, if it exists
+  optional string alias = 110;
 }

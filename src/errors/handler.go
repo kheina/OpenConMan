@@ -3,7 +3,6 @@ package errors
 import (
 	"context"
 	"encoding/hex"
-	"fmt"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -26,7 +25,6 @@ func ApiErrorHandler(l hclog.Logger) runtime.ErrorHandlerFunc {
 		var kerr *ApiError
 		if sterr, ok := err.(interface{ GRPCStatus() *status.Status }); ok {
 			for _, d := range sterr.GRPCStatus().Details() {
-				fmt.Printf("==> sterr.Detail: %#v\n", d)
 				if und, ok := d.(*pb.ApiError); ok {
 					kerr = &ApiError{
 						ApiError: und,
