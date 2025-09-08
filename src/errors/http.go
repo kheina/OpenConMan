@@ -5,8 +5,10 @@ import "google.golang.org/grpc/codes"
 type Status uint32
 
 const (
-	BadRequest Status = 400
-	Conflict          = 409
+	BadRequest   Status = 400
+	Unauthorized        = 401
+	Forbidden           = 403
+	Conflict            = 409
 
 	Internal = 500
 )

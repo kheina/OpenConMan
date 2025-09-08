@@ -6,6 +6,7 @@ import (
 	"github.com/kheina/openconman/src/daemon"
 	"github.com/kheina/openconman/src/srv"
 	"github.com/kheina/openconman/src/test"
+	"github.com/kheina/openconman/src/users"
 	"github.com/kheina/openconman/src/version"
 )
 
@@ -16,6 +17,7 @@ func initCLI() *cli.CLI {
 	test.RegisterCommand(i)
 	version.RegisterCommand(i)
 	certificate.RegisterCommand(i)
+	users.RegisterCommand(i)
 	return i
 }
 

@@ -76,7 +76,7 @@ func (c *Command) Args() cli.Args {
 }
 
 func (c *Command) Run() error {
-	const op = "daemon.Run"
+	const op = "daemon.(Command).Run"
 	if c.key == daemonCommandUnknown {
 		// default to standard behavior (return help)
 		return cli.UnimplementedCommandError

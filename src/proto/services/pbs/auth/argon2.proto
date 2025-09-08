@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package server.auth.pbs.v1.argon2;
+
+option go_package = "github.com/kheina/openconman/src/gen/pbs/auth/argon2;argon2";
+
+message Argon2Config {
+  // Time config for Argon2 password hashing. It defines how many iterations the
+  // algorithm should make over the memory.
+  uint32 time = 10;
+  // How much memory to use to perform the hashing. This config stores this
+  // value in megaboys
+  uint32 memory = 20;
+  // The number of threads to use for hashing.
+  uint32 parallelism = 30;
+  // The length, in bytes, of the resultant password hash.
+  uint32 hash_length = 40;
+  // The length, in bytes, of the salt to generate for the password hash.
+  // Generally, the salt should be at least as long as the hash length.
+  //   uint32 salt_length = 50;
+}
+
+message Argon2Hash {
+  // Hash is the hash of the password itself, created using the accompanying
+  // salt and config.
+  bytes hash = 1;
+  // The salt used to create the hash
+  bytes salt = 2;
+  // The config used to create the hash
+  Argon2Config config = 3;
+}
