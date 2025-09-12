@@ -13,7 +13,7 @@ jobs:
     # needs:
     #   - static_check
     #   - test
-    runs-on: debian-latest
+    runs-on: ubuntu-latest
     outputs:
       go_version: ${{ steps.v.outputs.go_version }}
       version: ${{ steps.v.outputs.version }}
