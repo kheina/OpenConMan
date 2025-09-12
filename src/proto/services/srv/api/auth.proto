@@ -26,6 +26,7 @@ service Auth {
 message PostLoginRequest {
   string username = 10;
   string password = 20;
+  repeated string scopes = 30;
 }
 
 message PostLoginResponse {

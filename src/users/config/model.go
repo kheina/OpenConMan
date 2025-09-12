@@ -31,6 +31,7 @@ func New(name string) *UserConfig {
 			// this must be initialized for storing the hash later
 		},
 		User: &user.UserData{
+			Id:   strings.ToLower(name),
 			Name: name,
 		},
 	}
@@ -38,6 +39,24 @@ func New(name string) *UserConfig {
 
 func (*UserConfig) GetScope() pb.SCOPE                   { return pb.SCOPE_UNKNOWN_SCOPE }
 func (u *UserConfig) GetPermissions() []*user.Permission { return u.Permissions }
+
+func trav(scopes *[]string, scope string, p *user.Permission) {
+	scope = scope + scopeToString(p.Scope) + ":"
+	for _, a := range p.Actions {
+		*scopes = append(*scopes, scope+actionToString(a))
+	}
+	for _, pp := range p.Permissions {
+		trav(scopes, scope, pp)
+	}
+}
+
+func (u *UserConfig) GetScopes() []string {
+	scopes := []string{}
+	for _, p := range u.Permissions {
+		trav(&scopes, "", p)
+	}
+	return scopes
+}
 
 // AddScope takes a scope string in the format of scope:scope...:action gives
 // the user that permission

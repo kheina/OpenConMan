@@ -28,6 +28,7 @@ type PostLoginRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Username      string                 `protobuf:"bytes,10,opt,name=username,proto3" json:"username,omitempty"`
 	Password      string                 `protobuf:"bytes,20,opt,name=password,proto3" json:"password,omitempty"`
+	Scopes        []string               `protobuf:"bytes,30,rep,name=scopes,proto3" json:"scopes,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -74,6 +75,13 @@ func (x *PostLoginRequest) GetPassword() string {
 		return x.Password
 	}
 	return ""
+}
+
+func (x *PostLoginRequest) GetScopes() []string {
+	if x != nil {
+		return x.Scopes
+	}
+	return nil
 }
 
 type PostLoginResponse struct {
@@ -132,11 +140,12 @@ var File_services_srv_api_auth_proto protoreflect.FileDescriptor
 
 const file_services_srv_api_auth_proto_rawDesc = "" +
 	"\n" +
-	"\x1bservices/srv/api/auth.proto\x12\x12server.api.auth.v1\x1a\x1cgoogle/api/annotations.proto\x1a.protoc-gen-openapiv2/options/annotations.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"J\n" +
+	"\x1bservices/srv/api/auth.proto\x12\x12server.api.auth.v1\x1a\x1cgoogle/api/annotations.proto\x1a.protoc-gen-openapiv2/options/annotations.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"b\n" +
 	"\x10PostLoginRequest\x12\x1a\n" +
 	"\busername\x18\n" +
 	" \x01(\tR\busername\x12\x1a\n" +
-	"\bpassword\x18\x14 \x01(\tR\bpassword\"_\n" +
+	"\bpassword\x18\x14 \x01(\tR\bpassword\x12\x16\n" +
+	"\x06scopes\x18\x1e \x03(\tR\x06scopes\"_\n" +
 	"\x11PostLoginResponse\x12\x14\n" +
 	"\x05token\x18\n" +
 	" \x01(\tR\x05token\x124\n" +

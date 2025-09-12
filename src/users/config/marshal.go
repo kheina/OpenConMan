@@ -3,7 +3,6 @@ package config
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"os"
 	"regexp"
 	"strings"
@@ -34,21 +33,6 @@ func scopeToString(s auth.SCOPE) string {
 	}
 }
 
-func trav(w io.StringWriter, scope string, p *user.Permission) error {
-	scope = scope + scopeToString(p.Scope) + ":"
-	for _, a := range p.Actions {
-		if _, err := w.WriteString(fmt.Sprintf("%s%s\n", scope, actionToString(a))); err != nil {
-			return err
-		}
-	}
-	for _, pp := range p.Permissions {
-		if err := trav(w, scope, pp); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func (u *UserConfig) Marshal() ([]byte, error) {
 	var buf bytes.Buffer
 	_, err := buf.WriteString("[user]\n")
@@ -70,8 +54,8 @@ func (u *UserConfig) Marshal() ([]byte, error) {
 	if _, err = buf.WriteString("\n[scopes]\n"); err != nil {
 		return nil, err
 	}
-	for _, p := range u.Permissions {
-		if err = trav(&buf, "", p); err != nil {
+	for _, s := range u.GetScopes() {
+		if _, err = buf.WriteString(s + "\n"); err != nil {
 			return nil, err
 		}
 	}
