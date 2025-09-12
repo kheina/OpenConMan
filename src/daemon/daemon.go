@@ -40,7 +40,8 @@ func (c *controller) Create(ctx context.Context, args []string) error {
 	if exe == "" || strings.HasPrefix(exe, "/tmp") {
 		return fmt.Errorf("%s: cannot set a temporary file as daemon executable. exec: %s", op, exe)
 	}
-	if err = newUnitFile(exe, service, args); err != nil {
+	dp, err := newUnitFile(exe, service, args)
+	if err != nil {
 		return errors.Wrap(op, err, "failed to create openconman.service file")
 	}
 	if err = c.dbus.ReloadContext(ctx); err != nil {
@@ -49,6 +50,7 @@ func (c *controller) Create(ctx context.Context, args []string) error {
 	if c.dbus, err = dbus.NewSystemdConnectionContext(ctx); err != nil {
 		return errors.Wrap(op, err, "could not reconnect to systemd bus")
 	}
+	fmt.Printf("successfully created daemon at %s\n", dp)
 	return nil
 }
 
@@ -60,6 +62,7 @@ func (c *controller) Enable(ctx context.Context) error {
 	if _, err := c.dbus.StartUnitContext(ctx, service, "replace", nil); err != nil {
 		return errors.Wrap(op, err, "failed to start %s", service)
 	}
+	fmt.Printf("enabled %s\n", service)
 	return nil
 }
 

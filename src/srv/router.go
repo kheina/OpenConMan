@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"strconv"
@@ -186,7 +187,16 @@ func (r *Router) Serve() error {
 	}
 
 	// api handler needs to be wrapped in cors middleware
-	cors := cors.New(r.logger)
+	copts := []cors.Option{cors.WithLogger(r.logger)}
+	if u, err := url.Parse("scheme://" + r.addr); err != nil {
+		copts = append(copts, cors.WithOrigin(u.Hostname()))
+	}
+	if r.insecure {
+		copts = append(copts, cors.WithProtocol("http"))
+	} else {
+		copts = append(copts, cors.WithProtocol("https"))
+	}
+	cors := cors.New(copts...)
 	h = cors.WrapHandler(h)
 	mux := http.NewServeMux()
 

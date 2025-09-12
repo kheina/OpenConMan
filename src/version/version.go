@@ -22,7 +22,7 @@ type Version struct {
 func (v *Version) String() string {
 	vstr := fmt.Sprintf("%d.%d.%d", v.Major, v.Minor, v.Patch)
 	if v.Dev {
-		vstr = fmt.Sprintf("%s+dev", vstr)
+		vstr = fmt.Sprintf("%s+dev-%d", vstr, v.BuildDate.Unix())
 	}
 	return vstr
 }

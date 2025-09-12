@@ -51,6 +51,49 @@ func (a *arg) Value() any {
 	}
 }
 
+func (a *arg) SetValue(v string) error {
+	const op = "cli.(arg).SetValue"
+	switch dest := a.dest.(type) {
+	case *bool:
+		b, err := strconv.ParseBool(v)
+		if err != nil {
+			return fmt.Errorf("%s: could not parse bool value for %s: %s", op, a.key, v)
+		}
+		*dest = b
+	case *string:
+		*dest = v
+	case *int:
+		i, err := strconv.ParseInt(v, 10, 0)
+		if err != nil {
+			return fmt.Errorf("%s: could not parse int value for %s: %s", op, a.key, v)
+		}
+		*dest = int(i)
+	case *uint:
+		u, err := strconv.ParseUint(v, 10, 0)
+		if err != nil {
+			return fmt.Errorf("%s: could not parse uint value for %s: %s", op, a.key, v)
+		}
+		*dest = uint(u)
+	case *[]byte:
+		if dest == nil {
+			// this is to avoid a nil pointer dereference
+			// we need to populate the pointer first
+			dest = &[]byte{}
+		}
+		*dest = []byte(v)
+	case *[]string:
+		if dest == nil {
+			// this is to avoid a nil pointer dereference
+			// we need to populate the pointer first
+			dest = &[]string{}
+		}
+		*dest = append(*dest, v)
+	default:
+		return fmt.Errorf("%s: found unexpected destination type for %s: %T", op, a.key, dest)
+	}
+	return nil
+}
+
 type argType int
 
 const (
@@ -153,7 +196,7 @@ func NewStringSliceArg(key, description string, destination *[]string, flags ...
 
 // ParseArgs parses all of the passed command line arguments using the args
 // created by other exported cli functions
-func ParseArgs(args []string, a ...*arg) error {
+func (i *CLI) ParseArgs(args []string, a ...*arg) error {
 	const op = "cli.ParseArgs"
 	found := make(map[string]bool)
 	mapper := make(map[string]*arg)
@@ -169,6 +212,19 @@ func ParseArgs(args []string, a ...*arg) error {
 			mapper[n] = arg
 		}
 	}
+	// pull possible values from the env first
+	for _, arg := range a {
+		envVar := i.envVariable(arg)
+		if envVar == "" {
+			continue
+		}
+		if v, ok := os.LookupEnv(envVar); ok {
+			if err := arg.SetValue(v); err != nil {
+				return err
+			}
+		}
+	}
+	// then parse all passed cli args
 	for i := 0; i < len(args); i++ {
 		arg, v, _ := strings.Cut(args[i], "=")
 		value, ok := mapper[arg]
@@ -197,13 +253,6 @@ func ParseArgs(args []string, a ...*arg) error {
 				}
 				v = args[i]
 			}
-		} else if dest, ok := value.dest.(*bool); ok {
-			var err error
-			*dest, err = strconv.ParseBool(v)
-			if err != nil {
-				return fmt.Errorf("%s: could not parse bool value for %s: %s", op, value.key, v)
-			}
-			continue
 		}
 
 		// if the value of the passed arg indicates it's an env variable or file, swap the contents
@@ -219,37 +268,8 @@ func ParseArgs(args []string, a ...*arg) error {
 			v = string(vb)
 		}
 
-		switch dest := value.dest.(type) {
-		case *string:
-			*dest = v
-		case *int:
-			i, err := strconv.ParseInt(v, 10, 0)
-			if err != nil {
-				return fmt.Errorf("%s: could not parse int value for %s: %s", op, value.key, v)
-			}
-			*dest = int(i)
-		case *uint:
-			u, err := strconv.ParseUint(v, 10, 0)
-			if err != nil {
-				return fmt.Errorf("%s: could not parse uint value for %s: %s", op, value.key, v)
-			}
-			*dest = uint(u)
-		case *[]byte:
-			if dest == nil {
-				// this is to avoid a nil pointer dereference
-				// we need to populate the pointer first
-				dest = &[]byte{}
-			}
-			*dest = []byte(v)
-		case *[]string:
-			if dest == nil {
-				// this is to avoid a nil pointer dereference
-				// we need to populate the pointer first
-				dest = &[]string{}
-			}
-			*dest = append(*dest, v)
-		default:
-			return fmt.Errorf("%s: found unexpected destination type for %s: %T", op, value.key, dest)
+		if err := value.SetValue(v); err != nil {
+			return err
 		}
 	}
 	return nil

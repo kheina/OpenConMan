@@ -26,16 +26,25 @@ type KhCorsMiddleware struct {
 	logger hclog.Logger
 }
 
-func New(logger hclog.Logger) *KhCorsMiddleware {
-	return &KhCorsMiddleware{
-		allowedOrigins: []string{
+func New(opt ...Option) *KhCorsMiddleware {
+	opts := getOpts(opt...)
+
+	if len(opts.withOrigin) == 0 {
+		opts.withOrigin = []string{
 			"localhost",
 			"127.0.0.1",
-		},
-		allowedProtocols: []string{
+		}
+	}
+	if len(opts.withProtocol) == 0 {
+		opts.withProtocol = []string{
 			"http",
 			"https",
-		},
+		}
+	}
+
+	return &KhCorsMiddleware{
+		allowedOrigins:   opts.withOrigin,
+		allowedProtocols: opts.withProtocol,
 		allowedHeaders: append([]string{
 			"access-control-request-method",
 			"origin",
@@ -81,7 +90,7 @@ func New(logger hclog.Logger) *KhCorsMiddleware {
 		allowCredentials: true,
 		maxAge:           86400,
 
-		logger: logger,
+		logger: opts.withLogger,
 	}
 }
 

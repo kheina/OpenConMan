@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"regexp"
 	"slices"
 	"strings"
 	"unicode"
@@ -57,18 +58,21 @@ func (c *UnimplementedCommand) Run() error {
 type CommandFactory func() (Command, error)
 
 type CLI struct {
-	name     string
-	commands map[string]*command
-	args     []*arg
+	name      string
+	commands  map[string]*command
+	args      []*arg
+	envPrefix string
 
 	help_ bool
 }
 
-// NewCLI returns a new CLI with the help command already attached
-func NewCLI(name string) *CLI {
+// New returns a new CLI with the help command already attached
+func New(name string, opt ...Option) *CLI {
+	opts := getOpts(opt...)
 	cli := &CLI{
-		name:     name,
-		commands: make(map[string]*command),
+		name:      name,
+		commands:  make(map[string]*command),
+		envPrefix: opts.withEnvPrefix,
 	}
 	cli.NewGlobalArg(NewBoolArg("help", "Prints this help message", &cli.help_, "--help", "-h"))
 	return cli
@@ -93,6 +97,17 @@ func (i *CLI) NewCommand(key string, cmd CommandFactory) *command {
 	}
 	i.commands[key] = c
 	return c
+}
+
+func (i *CLI) envVariable(arg *arg) string {
+	switch {
+	case i.envPrefix == "":
+		return ""
+	case arg.key == "":
+		return ""
+	}
+	ws := regexp.MustCompile(`\s+`)
+	return strings.ToUpper(i.envPrefix + "_" + ws.ReplaceAllString(arg.key, "_"))
 }
 
 // NewSubCommand adds a nested command within a pre-existing command. these are
@@ -284,7 +299,7 @@ func (i *CLI) Run(args []string) int {
 		fmt.Fprintf(os.Stderr, "cli error: %s\n", err.Error())
 		return 1
 	}
-	if err := ParseArgs(args, append(i.args, cmd.Args()...)...); err != nil {
+	if err := i.ParseArgs(args, append(i.args, cmd.Args()...)...); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err.Error())
 		return 1
 	}

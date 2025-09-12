@@ -11,7 +11,7 @@ import (
 )
 
 func initCLI() *cli.CLI {
-	i := cli.NewCLI("conman")
+	i := cli.New("conman", cli.WithEnvPrefix("ocm"))
 	srv.RegisterCommand(i)
 	daemon.RegisterCommand(i)
 	test.RegisterCommand(i)
