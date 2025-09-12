@@ -188,8 +188,10 @@ func (r *Router) Serve() error {
 
 	// api handler needs to be wrapped in cors middleware
 	copts := []cors.Option{cors.WithLogger(r.logger)}
-	if u, err := url.Parse("scheme://" + r.addr); err != nil {
-		copts = append(copts, cors.WithOrigin(u.Hostname()))
+	if u, err := url.Parse("scheme://" + r.addr); err == nil {
+		o := u.Hostname()
+		r.logger.Trace("adding allowed origin", "origin", o)
+		copts = append(copts, cors.WithOrigin(o))
 	}
 	if r.insecure {
 		copts = append(copts, cors.WithProtocol("http"))

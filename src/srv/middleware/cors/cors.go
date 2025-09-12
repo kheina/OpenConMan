@@ -98,7 +98,7 @@ func (c *KhCorsMiddleware) WrapHandler(h http.Handler) http.Handler {
 	const op = "cors.(KhCorsMiddleware).WrapHandler"
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		if o := req.Header.Get("origin"); o != "" {
-			c.logger.Trace(fmt.Sprintf("%s: origin: %s", op, o))
+			c.logger.Trace(op, "origin", o)
 			origin, err := url.Parse(o)
 
 			if err != nil {

@@ -44,6 +44,14 @@ func WithLogger(l hclog.Logger) Option {
 // WithOrigin passes a valid origin to cors to allow requests from. Can be used
 // multiple times.
 func WithOrigin(s string) Option {
+	switch s {
+	case "0.0.0.0":
+		s = "*"
+	case "::":
+		s = "*"
+	case "[::]":
+		s = "*"
+	}
 	return func(o *options) {
 		o.withOrigin = append(o.withOrigin, s)
 	}
