@@ -19,7 +19,7 @@ type Server struct {
 }
 
 func New(ctx context.Context, opt ...Option) (*Server, error) {
-	const op = "daemon.New"
+	const op = "systemd.New"
 	opts := getOpts(opt...)
 	dconn, err := dbus.NewSystemdConnectionContext(ctx)
 	if err != nil {

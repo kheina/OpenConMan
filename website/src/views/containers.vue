@@ -15,6 +15,7 @@
 </template>
 <script setup lang='ts'>
 import type { Container } from '@/types/container';
+import { cetch } from '@/utilities';
 import { ref, type Ref } from 'vue';
 
 const host = `${window.location.protocol}//${window.location.hostname}:5050`;
@@ -22,7 +23,7 @@ const containers: Ref<{
 	items: Container[],
 } | null> = ref(null);
 
-fetch(
+cetch(
 	`${host}/v1/containers`
 ).then(
 	r => r.json()

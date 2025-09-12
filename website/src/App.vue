@@ -39,6 +39,16 @@
 						<RouterLink to='/test'>test</RouterLink>
 					</div>
 				</li>
+				<li>
+					<div v-if='GetCookie("ocm-auth")'>
+						<div/>
+						<RouterLink to='/user'>User</RouterLink>
+					</div>
+					<div v-else>
+						<div/>
+						<RouterLink to='/user/login'>Login</RouterLink>
+					</div>
+				</li>
 			</ol>
 		</nav>
 	</div>
@@ -48,6 +58,7 @@
 </template>
 <script setup lang='ts'>
 import { RouterLink, RouterView } from 'vue-router';
+import { GetCookie } from './utilities';
 </script>
 <style>
 body {

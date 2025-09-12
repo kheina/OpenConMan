@@ -173,19 +173,14 @@ func (r *Router) Serve() error {
 			Certificates: []tls.Certificate{cert},
 		}
 
-		// don't convert the grpc listener, as it's handled internally by grpc.Server
-		// r.grpcListener = tls.NewListener(r.grpcListener, conf)
+		// don't convert the grpc listener to tls, as it's handled internally by grpc.Server
 		r.httpListener = tls.NewListener(r.httpListener, conf)
 		grpco = append(grpco, grpc.Creds(credentials.NewTLS(conf)))
 	}
 
 	ctx := r.srvCtx
 	r.grpcServer = grpc.NewServer(grpco...)
-	if err = api.RegisterGrpcServices(ctx, r.grpcServer, r.logger); err != nil {
-		return fmt.Errorf("%s: failed to register gRPC services: %w", op, err)
-	}
-
-	h, err := api.Handler(ctx, r.gaddr, r.logger, conf)
+	h, err := api.Handler(ctx, r.grpcServer, r.gaddr, r.logger, conf)
 	if err != nil {
 		return fmt.Errorf("%s: failed to retrieve api handler: %w", op, err)
 	}

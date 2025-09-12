@@ -46,9 +46,12 @@ func RegisterCommand(i *cli.CLI) {
 	c.NewSubCommand("create", func() (cli.Command, error) {
 		return newCreateCommand(), nil
 	})
-	// c.NewSubCommand("read", func() (cli.Command, error) {
-	// 	return &Command{sub: subcommandRead}, nil
-	// })
+	c.NewSubCommand("read", func() (cli.Command, error) {
+		return newReadCommand(), nil
+	})
+	c.NewSubCommand("login", func() (cli.Command, error) {
+		return newLoginCommand(), nil
+	})
 	// c.NewSubCommand("update", func() (cli.Command, error) {
 	// 	return &Command{sub: subcommandUpdate}, nil
 	// })

@@ -9,7 +9,6 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
-	"math/big"
 	"time"
 )
 
@@ -27,15 +26,11 @@ func GenerateCertificate(opt ...Option) ([]byte, []byte, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("%s: failed to generate ECDSA private key: %w", op, err)
 	}
-	sn, err := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), 128))
-	if err != nil {
-		return nil, nil, fmt.Errorf("%s: failed to generate cert serial number: %w", op, err)
-	}
+
 	template := &x509.Certificate{
-		SerialNumber:          sn,
-		KeyUsage:              x509.KeyUsageDataEncipherment | x509.KeyUsageDigitalSignature,
+		KeyUsage:              x509.KeyUsageDataEncipherment | x509.KeyUsageDigitalSignature | x509.KeyUsageKeyAgreement | x509.KeyUsageCertSign,
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
-		NotAfter:              time.Now().Add(365 * 24 * time.Hour),
+		NotAfter:              time.Now().Add(365 * 24 * time.Hour), // 1 year ig
 		BasicConstraintsValid: true,
 		Subject: pkix.Name{
 			Country:    opts.withCountry,

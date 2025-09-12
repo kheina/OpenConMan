@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/kheina/openconman/src/auth"
 	"github.com/kheina/openconman/src/errors"
 	pb "github.com/kheina/openconman/src/gen/pbs/api/systemd"
 	srv "github.com/kheina/openconman/src/gen/srv/api/systemd"
@@ -15,6 +16,10 @@ import (
 
 func (s *Server) ListAllServices(ctx context.Context, req *srv.GetServiceStatusesRequest) (*srv.GetServiceStatusesResponse, error) {
 	const op = "systemd.(Server).ListServices"
+	if err := auth.Authorize(ctx, auth.List, auth.Systemd); err != nil {
+		return nil, errors.Wrap(op, err, "failed to authorize request")
+	}
+
 	files, err := s.dbus.ListUnitFilesContext(ctx)
 	if err != nil {
 		return nil, errors.Wrap(op, err, "failed to list systemd unit files")
@@ -79,6 +84,9 @@ func (s *Server) ListAllServices(ctx context.Context, req *srv.GetServiceStatuse
 
 func (s *Server) ListServices(ctx context.Context, req *srv.GetServiceStatusesRequest) (*srv.GetServiceStatusesResponse, error) {
 	const op = "systemd.(Server).ListServices"
+	if err := auth.Authorize(ctx, auth.List, auth.Systemd); err != nil {
+		return nil, errors.Wrap(op, err, "failed to authorize request")
+	}
 
 	// fetch unit files (never started, permanently stopped, aliases)
 	files, err := s.dbus.ListUnitFilesByPatternsContext(ctx, allUnitFileStateStrings(), []string{"ocm-*"})
@@ -161,6 +169,10 @@ func (s *Server) ListServices(ctx context.Context, req *srv.GetServiceStatusesRe
 
 func (s *Server) EnableService(ctx context.Context, req *srv.GetEnableServiceRequest) (*srv.GetEnableServiceResponse, error) {
 	const op = "systemd.(Server).StartService"
+	if err := auth.Authorize(ctx, auth.Update, auth.Systemd); err != nil {
+		return nil, errors.Wrap(op, err, "failed to authorize request")
+	}
+
 	switch {
 	case req.Name == "":
 		return nil, errors.New(errors.BadRequest, op, "missing required field: name")
@@ -203,6 +215,10 @@ func (s *Server) EnableService(ctx context.Context, req *srv.GetEnableServiceReq
 
 func (s *Server) DisableService(ctx context.Context, req *srv.GetEnableServiceRequest) (*srv.GetEnableServiceResponse, error) {
 	const op = "systemd.(Server).StopService"
+	if err := auth.Authorize(ctx, auth.Update, auth.Systemd); err != nil {
+		return nil, errors.Wrap(op, err, "failed to authorize request")
+	}
+
 	switch {
 	case req.Name == "":
 		return nil, errors.New(errors.BadRequest, op, "missing required field: name")
@@ -245,6 +261,10 @@ func (s *Server) DisableService(ctx context.Context, req *srv.GetEnableServiceRe
 
 func (s *Server) PutService(ctx context.Context, req *srv.PutServiceRequest) (*srv.PutServiceResponse, error) {
 	const op = "systemd.(Server).PutService"
+	if err := auth.Authorize(ctx, auth.Create, auth.Systemd); err != nil {
+		return nil, errors.Wrap(op, err, "failed to authorize request")
+	}
+
 	switch {
 	case req.Name == "":
 		return nil, errors.New(errors.BadRequest, op, "missing required field: name")
@@ -265,7 +285,7 @@ func (s *Server) PutService(ctx context.Context, req *srv.PutServiceRequest) (*s
 		return nil, errors.New(errors.Conflict, op, fmt.Sprintf("file already exists at %s", path))
 	}
 
-	if err := os.WriteFile(path, []byte(req.Content), 644); err != nil {
+	if err := os.WriteFile(path, []byte(req.Content), 0644); err != nil {
 		return nil, errors.Wrap(op, err, "failed to write unit file")
 	}
 	if err := s.dbus.ReloadContext(ctx); err != nil {
@@ -298,6 +318,10 @@ func (s *Server) PutService(ctx context.Context, req *srv.PutServiceRequest) (*s
 
 func (s *Server) DeleteService(ctx context.Context, req *srv.DeleteServiceRequest) (*srv.DeleteServiceResponse, error) {
 	const op = "systemd.(Server).DeleteService"
+	if err := auth.Authorize(ctx, auth.Delete, auth.Systemd); err != nil {
+		return nil, errors.Wrap(op, err, "failed to authorize request")
+	}
+
 	switch {
 	case req.Name == "":
 		return nil, errors.New(errors.BadRequest, op, "missing required field: name")

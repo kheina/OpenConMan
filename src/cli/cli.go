@@ -60,6 +60,7 @@ const (
 	argTypeUint
 	argTypeFlag
 	argTypeByteString
+	argTypeStringSlice
 )
 
 func (t argType) String() string {
@@ -74,6 +75,8 @@ func (t argType) String() string {
 		return "uint"
 	case argTypeFlag:
 		return "flag"
+	case argTypeStringSlice:
+		return "string"
 	default:
 		return "unknown"
 	}
@@ -92,6 +95,8 @@ func (a *arg) Type() argType {
 		return argTypeFlag
 	case *[]byte:
 		return argTypeByteString
+	case *[]string:
+		return argTypeStringSlice
 	default:
 		return argTypeUnknown
 	}
@@ -137,6 +142,15 @@ func NewBoolArg(key, description string, destination *bool, flags ...string) *ar
 	return newArg(op, key, description, destination, flags)
 }
 
+// NewStringSliceArg returns a new arg with the provided values to be parsed by
+// ParseArgs. panics if you do something stupid like not provide any flags. flags
+// should be formatted WITH preceding dashes. NOTE: initial array should be non-nil
+// and empty
+func NewStringSliceArg(key, description string, destination *[]string, flags ...string) *arg {
+	const op = "cli.NewStringSliceArg"
+	return newArg(op, key, description, destination, flags)
+}
+
 // ParseArgs parses all of the passed command line arguments using the args
 // created by other exported cli functions
 func ParseArgs(args []string, a ...*arg) error {
@@ -165,7 +179,11 @@ func ParseArgs(args []string, a ...*arg) error {
 		if f, ok := found[value.key]; ok && f {
 			return fmt.Errorf("%s: duplicate argument received: %s", op, value.key)
 		}
-		found[value.key] = true
+		switch value.dest.(type) {
+		case *[]string:
+		default:
+			found[value.key] = true
+		}
 
 		// gotta parse bool early since it can be a toggle and not a passed value
 		if v == "" {
@@ -223,6 +241,13 @@ func ParseArgs(args []string, a ...*arg) error {
 				dest = &[]byte{}
 			}
 			*dest = []byte(v)
+		case *[]string:
+			if dest == nil {
+				// this is to avoid a nil pointer dereference
+				// we need to populate the pointer first
+				dest = &[]string{}
+			}
+			*dest = append(*dest, v)
 		default:
 			return fmt.Errorf("%s: found unexpected destination type for %s: %T", op, value.key, dest)
 		}

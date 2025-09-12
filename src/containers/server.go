@@ -9,6 +9,7 @@ import (
 	docker "github.com/moby/moby/client"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	"github.com/kheina/openconman/src/auth"
 	"github.com/kheina/openconman/src/errors"
 	"github.com/kheina/openconman/src/gen/pbs/api/containers"
 	srv "github.com/kheina/openconman/src/gen/srv/api/docker"
@@ -35,6 +36,10 @@ func NewServer() (*Server, error) {
 
 func (s *Server) GetContainers(ctx context.Context, req *srv.GetContainerStatusesRequest) (*srv.GetContainerStatusesResponse, error) {
 	const op = "containers.(Server).GetContainers"
+	if err := auth.Authorize(ctx, auth.List, auth.Containers); err != nil {
+		return nil, errors.Wrap(op, err, "failed to authorize request")
+	}
+
 	c, err := s.client.ContainerList(ctx, container.ListOptions{All: true})
 	if err != nil {
 		return nil, errors.Wrap(op, err, "failed to list containers")

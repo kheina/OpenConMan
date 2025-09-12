@@ -22,6 +22,28 @@ export function Notify() {
 	}
 }
 
+export function GetCookie(cookieName: string, default_value: any = null, type: string | null = null) {
+	const name = cookieName + "=";
+	let ca = document.cookie.split(";");
+	let value: any = default_value;
+	for (let i = 0; i < ca.length; i++) {
+		let c = ca[i];
+		while (c.charAt(0) == " ") {
+			c = c.substring(1);
+		}
+
+		if (c.indexOf(name) == 0) {
+			value = decodeURIComponent(c.substring(name.length, c.length));
+			break;
+		}
+	}
+
+	if (value === "null") return null;
+	if (value === "undefined") return undefined;
+	// if (value !== default_value && type !== null) return ParserTypeMap[type](value);
+	return value;
+}
+
 interface CetchOptions {
 	attempts?: number,
 	handlers?: { [statusCode: number]: { (r: Response): void; }; },
@@ -36,19 +58,27 @@ interface CetchOptions {
  * 
  * @param url 
  * @param options interface CetchOptions {
- * 	attempts?:      number,
- * 	handlers?: { [statusCode: number]: { (r: Response): void; }; },
- * 	method?:        "GET" | "PUT" | "POST" | "PATCH" | "DELETE",
- * 	credentials?:   "include",
- * 	headers?:       { [header: string]: string; },
- * 	body?:          string | any,
+ * 	attempts?:    number,
+ * 	handlers?:    { [statusCode: number]: { (r: Response): void; }; },
+ * 	method?:      "GET" | "PUT" | "POST" | "PATCH" | "DELETE",
+ * 	credentials?: "include",
+ * 	headers?:     { [header: string]: string; },
+ * 	body?:        string | any,
+ *  trace?:       string,
  * }
  * @returns 
  */
 export async function cetch(url: string, options: CetchOptions = {}): Promise<Response> {
 	const handlers = options?.handlers || {};
-	let response: Response;
+	options.headers = options?.headers || {};
 
+	const auth = GetCookie("ocm-auth");
+	if (auth) {
+		options.credentials = "include";
+		options.headers.authorization = "bearer " + auth;
+	}
+
+	let response: Response;
 	try {
 		response = await fetch(url, options);
 	}

@@ -23,9 +23,9 @@ message Argon2Config {
 message Argon2Hash {
   // Hash is the hash of the password itself, created using the accompanying
   // salt and config.
-  bytes hash = 1;
+  bytes hash = 10;
   // The salt used to create the hash
-  bytes salt = 2;
+  bytes salt = 20;
   // The config used to create the hash
-  Argon2Config config = 3;
+  Argon2Config config = 30;
 }

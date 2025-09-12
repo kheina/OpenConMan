@@ -11,6 +11,7 @@ tools:
 .PHONY: proto
 proto:
 	buf generate -o "${TEMP}" src/proto
+	rm -r ./src/gen
 	cp -R ${TEMP}/github.com/kheina/openconman/* .
 
 .PHONY: deps
@@ -30,3 +31,7 @@ build-ui: build
 .PHONY: build
 build:
 	./scripts/build.sh
+
+.PHONY: test
+test:
+	go test -v -cover -json ./... | tparse -follow

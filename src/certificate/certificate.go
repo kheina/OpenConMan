@@ -51,10 +51,10 @@ func (c *Command) Run() error {
 	if err != nil {
 		return fmt.Errorf("%s: failed to generate certificate: %w", op, err)
 	}
-	if err := os.WriteFile(c.certfile, cert, 644); err != nil {
+	if err := os.WriteFile(c.certfile, cert, 0644); err != nil {
 		return fmt.Errorf("%s: failed to write certificate: %w", op, err)
 	}
-	if err := os.WriteFile(c.keyfile, pkey, 644); err != nil {
+	if err := os.WriteFile(c.keyfile, pkey, 0644); err != nil {
 		return fmt.Errorf("%s: failed to write private key: %w", op, err)
 	}
 	return nil

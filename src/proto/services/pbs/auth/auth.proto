@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package server.auth.pbs.v1.auth;
+
+option go_package = "github.com/kheina/openconman/src/gen/pbs/auth/auth;auth";
+
+// Defines repository scopes like systemd, networking, and others.
+enum SCOPE {
+  UNKNOWN_SCOPE = 0;
+  // Any will match any single scope, but will not match nested scopes. Any is
+  // parsed as "*"
+  ANY_SCOPE = 1;
+  // All will match every scope, sub scope, or no scope. All is parsed as "**"
+  ALL_SCOPES = 2;
+  SYSTEMD = 3;
+  ALIAS = 4;
+  CONTAINERS = 5;
+}
+
+// Action refers to a user action that is occurring within a given scope
+enum ACTION {
+  UNKNOWN_ACTION = 0;
+  ANY_ACTION = 1;
+  CREATE = 2;
+  READ = 3;
+  UPDATE = 4;
+  DELETE = 5;
+  LIST = 6;
+}

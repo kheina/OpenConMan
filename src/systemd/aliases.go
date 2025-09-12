@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/kheina/openconman/src/auth"
 	"github.com/kheina/openconman/src/errors"
 	pb "github.com/kheina/openconman/src/gen/pbs/api/systemd"
 	srv "github.com/kheina/openconman/src/gen/srv/api/systemd"
@@ -12,6 +13,10 @@ import (
 
 func (s *Server) PutServiceAlias(ctx context.Context, req *srv.PutServiceAliasRequest) (*srv.PutServiceAliasResponse, error) {
 	const op = "systemd.(Server).PutServiceAlias"
+	if err := auth.Authorize(ctx, auth.Create, auth.Systemd, auth.Alias); err != nil {
+		return nil, errors.Wrap(op, err, "failed to authorize request")
+	}
+
 	switch {
 	case req.Name == "":
 		return nil, errors.New(errors.BadRequest, op, "missing required field: name")
@@ -63,6 +68,10 @@ func (s *Server) PutServiceAlias(ctx context.Context, req *srv.PutServiceAliasRe
 
 func (s *Server) DeleteServiceAlias(ctx context.Context, req *srv.DeleteServiceRequest) (*srv.DeleteServiceResponse, error) {
 	const op = "systemd.(Server).DeleteServiceAlias"
+	if err := auth.Authorize(ctx, auth.Delete, auth.Systemd, auth.Alias); err != nil {
+		return nil, errors.Wrap(op, err, "failed to authorize request")
+	}
+
 	switch {
 	case req.Name == "":
 		return nil, errors.New(errors.BadRequest, op, "missing required field: name")

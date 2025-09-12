@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package server.auth.pbs.v1.user;
+
+option go_package = "github.com/kheina/openconman/src/gen/pbs/auth/user;user";
+
+import "services/pbs/auth/auth.proto";
+import "google/protobuf/timestamp.proto";
+
+message UserToken {
+  // User data
+  UserData user = 10;
+  // Structure describing what the user is capable of doing. Consists of a tree
+  // containing scopes and actions as leaves
+  // repeated Permission permissions = 20;
+
+  // The unique id of this token. Used to retrieve the permissions it is valid
+  // for server-side as well as revoking the token when it has expired.
+  string id = 20;
+  // Until when this token is valid for
+  google.protobuf.Timestamp expires = 30;
+  // What key was used to sign this token
+  string key = 40;
+}
+
+message UserData {
+  // The user's unique ID, it must be unique. It should always be the same as
+  // user's name in lowercase
+  string id = 10;
+  // The name of the user
+  string name = 20;
+  // Hashed password of the user, used for logins
+  // bytes hash = 20;
+}
+
+message Permission {
+  repeated Permission permissions = 10;
+  server.auth.pbs.v1.auth.SCOPE scope = 20;
+  repeated server.auth.pbs.v1.auth.ACTION actions = 30;
+}

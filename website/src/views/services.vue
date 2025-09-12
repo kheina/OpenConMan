@@ -61,6 +61,7 @@ import { onMounted, onUnmounted, ref, type Ref } from 'vue';
 import type { UnitStatus } from '@/types/systemd'; 
 import unitfiletemplate from '@/constants/unit_file';
 import CodeEditor from '@/components/CodeEditor.vue';
+import { cetch } from '@/utilities';
 
 const host = `${window.location.protocol}//${window.location.hostname}:5050`;
 const stopped: Set<string> = new Set(["dead", "disabled"]);
@@ -73,7 +74,7 @@ onMounted(() => update.value = Updater());
 onUnmounted(() => update.value = clearTimeout(update.value) ?? undefined);
 
 function StartService(u: UnitStatus) {
-	fetch(
+	cetch(
 		`${host}/v1/service/enable/${u.name}`
 	).then(
 		r => r.json()
@@ -88,7 +89,7 @@ function StartService(u: UnitStatus) {
 }
 
 function StopService(u: UnitStatus) {
-	fetch(
+	cetch(
 		`${host}/v1/service/disable/${u.name}`
 	).then(
 		r => r.json()
@@ -104,7 +105,7 @@ function StopService(u: UnitStatus) {
 
 function DeleteAlias(u: UnitStatus) {
 	if (!u.alias) return;
-	fetch(`${host}/v1/service/alias/${u.alias}`, {
+	cetch(`${host}/v1/service/alias/${u.alias}`, {
 		method: "DELETE",
 	}).catch(
 		console.error
@@ -112,7 +113,7 @@ function DeleteAlias(u: UnitStatus) {
 }
 
 function DeleteService(u: UnitStatus) {
-	fetch(`${host}/v1/service/${u.name}`, {
+	cetch(`${host}/v1/service/${u.name}`, {
 		method: "DELETE",
 	}).catch(
 		console.error
@@ -120,7 +121,7 @@ function DeleteService(u: UnitStatus) {
 }
 
 function CreateService() {
-	fetch(`${host}/v1/service`, {
+	cetch(`${host}/v1/service`, {
 		method: "PUT",
 		body: JSON.stringify({
 			name: newUnitName.value,
@@ -137,7 +138,7 @@ function CreateService() {
 }
 
 function Updater(): number {
-	fetch(
+	cetch(
 		`${host}/v1/services`
 	).then(
 		r => r.json()

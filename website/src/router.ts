@@ -24,6 +24,16 @@ export default createRouter({
 			name: 'all services',
 			component: () => import("@/views/all_services.vue"),
 		},
+		{
+			path: '/user/login',
+			name: 'login',
+			component: () => import("@/views/login.vue"),
+		},
+		{
+			path: '/user',
+			name: 'user',
+			component: () => import("@/views/user.vue"),
+		},
 
 		// test view
 		{

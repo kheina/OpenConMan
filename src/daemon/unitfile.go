@@ -40,16 +40,16 @@ func newUnitFile(exe, filename string, args []string) error {
 	// w = 010b = 2
 	// x = 001b = 1
 	// 644 == -rw-r--r--
-	if err := os.WriteFile(fmt.Sprintf("/etc/systemd/system/%s", filename), []byte(contents), 644); err != nil {
+	if err := os.WriteFile(fmt.Sprintf("/etc/systemd/system/%s", filename), []byte(contents), 0644); err != nil {
 		return err
 	}
 	if !util.PathExists(workingDirectory) {
-		if err := os.Mkdir(workingDirectory, 644); err != nil {
+		if err := os.Mkdir(workingDirectory, 0644); err != nil {
 			return err
 		}
 	}
 	if !util.PathExists(environmentFile) {
-		if err := os.WriteFile(environmentFile, []byte{}, 644); err != nil {
+		if err := os.WriteFile(environmentFile, []byte{}, 0644); err != nil {
 			return err
 		}
 	}

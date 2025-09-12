@@ -29,6 +29,7 @@
 </template>
 <script setup lang='ts'>
 import type { UnitStatus } from '@/types/systemd'; 
+import { cetch } from '@/utilities';
 import { ref, watch, type Ref } from 'vue';
 import fuzzysort from 'fuzzysort';
 
@@ -42,7 +43,7 @@ const allUnits: PreparedStatus[] = [];
 const units: Ref<PreparedStatus[] | null> = ref(null);
 
 function CreateAlias(u: UnitStatus) {
-	fetch(`${host}/v1/service/alias`, {
+	cetch(`${host}/v1/service/alias`, {
 		method: "PUT",
 		body: JSON.stringify({
 			name: u.name,
@@ -59,7 +60,7 @@ function CreateAlias(u: UnitStatus) {
 	);
 }
 
-fetch(
+cetch(
 	`${host}/v1/services/all`
 ).then(
 	r => r.json()
@@ -193,17 +194,21 @@ input {
 		-o-transition: var(--transition) var(--fadetime);
 		transition: var(--transition) var(--fadetime);
 	}
-}
-input:hover::placeholder {
-	color: var(--interact);
-}
-input:focus::placeholder {
-	color: #eeeeee20;
-}
-input:hover {
-	border-color: var(--borderhover);
-	color: var(--interact);
-	box-shadow: 0 0 10px 3px var(--activeshadowcolor);
+	&:hover::placeholder {
+		color: var(--interact);
+	}
+	&:hover {
+		border-color: var(--borderhover);
+		color: var(--interact);
+		box-shadow: 0 0 10px 3px var(--activeshadowcolor);
+	}
+	&:focus {
+		color: var(--text);
+		border-color: var(--interact);
+		&::placeholder {
+			color: #eeeeee20;
+		}
+	}
 }
 
 button {

@@ -99,11 +99,11 @@ type Argon2Hash struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Hash is the hash of the password itself, created using the accompanying
 	// salt and config.
-	Hash []byte `protobuf:"bytes,1,opt,name=hash,proto3" json:"hash,omitempty"`
+	Hash []byte `protobuf:"bytes,10,opt,name=hash,proto3" json:"hash,omitempty"`
 	// The salt used to create the hash
-	Salt []byte `protobuf:"bytes,2,opt,name=salt,proto3" json:"salt,omitempty"`
+	Salt []byte `protobuf:"bytes,20,opt,name=salt,proto3" json:"salt,omitempty"`
 	// The config used to create the hash
-	Config        *Argon2Config `protobuf:"bytes,3,opt,name=config,proto3" json:"config,omitempty"`
+	Config        *Argon2Config `protobuf:"bytes,30,opt,name=config,proto3" json:"config,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -173,9 +173,10 @@ const file_services_pbs_auth_argon2_proto_rawDesc = "" +
 	"hashLength\"u\n" +
 	"\n" +
 	"Argon2Hash\x12\x12\n" +
-	"\x04hash\x18\x01 \x01(\fR\x04hash\x12\x12\n" +
-	"\x04salt\x18\x02 \x01(\fR\x04salt\x12?\n" +
-	"\x06config\x18\x03 \x01(\v2'.server.auth.pbs.v1.argon2.Argon2ConfigR\x06configB=Z;github.com/kheina/openconman/src/gen/pbs/auth/argon2;argon2b\x06proto3"
+	"\x04hash\x18\n" +
+	" \x01(\fR\x04hash\x12\x12\n" +
+	"\x04salt\x18\x14 \x01(\fR\x04salt\x12?\n" +
+	"\x06config\x18\x1e \x01(\v2'.server.auth.pbs.v1.argon2.Argon2ConfigR\x06configB=Z;github.com/kheina/openconman/src/gen/pbs/auth/argon2;argon2b\x06proto3"
 
 var (
 	file_services_pbs_auth_argon2_proto_rawDescOnce sync.Once

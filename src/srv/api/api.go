@@ -14,14 +14,16 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/encoding/protojson"
 
+	"github.com/kheina/openconman/src/auth"
 	"github.com/kheina/openconman/src/containers"
 	"github.com/kheina/openconman/src/errors"
+	srvauth "github.com/kheina/openconman/src/gen/srv/api/auth"
 	"github.com/kheina/openconman/src/gen/srv/api/docker"
 	srvsys "github.com/kheina/openconman/src/gen/srv/api/systemd"
 	"github.com/kheina/openconman/src/systemd"
 )
 
-func Handler(ctx context.Context, grpcAddr string, logger hclog.Logger, conf *tls.Config) (http.Handler, error) {
+func Handler(ctx context.Context, gs *grpc.Server, grpcAddr string, logger hclog.Logger, conf *tls.Config) (http.Handler, error) {
 	const op = "api.Handler"
 	grpcopts := []grpc.DialOption{}
 	name := "conman"
@@ -57,32 +59,46 @@ func Handler(ctx context.Context, grpcAddr string, logger hclog.Logger, conf *tl
 				DiscardUnknown: true,
 			},
 		}),
+		runtime.WithOutgoingHeaderMatcher(func(key string) (string, bool) {
+			switch key {
+			case "Set-Cookie":
+				return key, true
+			default:
+				return runtime.DefaultHeaderMatcher(key)
+			}
+		}),
 		runtime.WithErrorHandler(errors.ApiErrorHandler(logger)),
 	)
 
-	// register all the different handlers
+	// register all of the different grpc servers
+	// NOTE: this MUST be done at the same time as registering the handlers
+	if srv, err := containers.NewServer(); err != nil {
+		return nil, fmt.Errorf("%s: failed to create containers server: %w", op, err)
+	} else {
+		docker.RegisterContainerServer(gs, srv)
+	}
+	if srv, err := systemd.New(ctx, systemd.WithLogger(logger)); err != nil {
+		return nil, fmt.Errorf("%s: failed to create systemd server: %w", op, err)
+	} else {
+		srvsys.RegisterSystemdServer(gs, srv)
+	}
+	if srv, err := auth.New(auth.WithLogger(logger)); err != nil {
+		return nil, fmt.Errorf("%s: failed to create auth server: %w", op, err)
+	} else {
+		srvauth.RegisterAuthServer(gs, srv)
+	}
+
+	// register all the different grpc handlers
+	// NOTE: this MUST be done at the same time as registering the servers
 	if err = docker.RegisterContainerHandler(ctx, gwmux, conn); err != nil {
-		return nil, fmt.Errorf("%s: failed to register gateway: %w", op, err)
+		return nil, fmt.Errorf("%s: failed to register container gateway: %w", op, err)
 	}
 	if err = srvsys.RegisterSystemdHandler(ctx, gwmux, conn); err != nil {
-		return nil, fmt.Errorf("%s: failed to register gateway: %w", op, err)
+		return nil, fmt.Errorf("%s: failed to register systemd gateway: %w", op, err)
+	}
+	if err = srvauth.RegisterAuthHandler(ctx, gwmux, conn); err != nil {
+		return nil, fmt.Errorf("%s: failed to register auth gateway: %w", op, err)
 	}
 
 	return gwmux, nil
-}
-
-func RegisterGrpcServices(ctx context.Context, gs *grpc.Server, l hclog.Logger) error {
-	const op = "api.RegisterGrpcServices"
-	cSrv, err := containers.NewServer()
-	if err != nil {
-		return fmt.Errorf("%s: failed to create containers server: %w", op, err)
-	}
-	docker.RegisterContainerServer(gs, cSrv)
-
-	sSrv, err := systemd.New(ctx, systemd.WithLogger(l))
-	if err != nil {
-		return fmt.Errorf("%s: failed to create systemd server: %w", op, err)
-	}
-	srvsys.RegisterSystemdServer(gs, sSrv)
-	return nil
 }

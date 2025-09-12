@@ -6,11 +6,11 @@ type Status uint32
 
 const (
 	BadRequest   Status = 400
-	Unauthorized        = 401
-	Forbidden           = 403
-	Conflict            = 409
+	Unauthorized Status = 401
+	Forbidden    Status = 403
+	Conflict     Status = 409
 
-	Internal = 500
+	Internal Status = 500
 )
 
 func (s Status) String() string {
