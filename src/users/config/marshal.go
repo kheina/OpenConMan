@@ -50,7 +50,6 @@ func (u *UserConfig) Marshal() ([]byte, error) {
 		return nil, err
 	}
 
-	// now for the hard part
 	if _, err = buf.WriteString("\n[scopes]\n"); err != nil {
 		return nil, err
 	}

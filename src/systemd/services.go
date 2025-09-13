@@ -168,7 +168,7 @@ func (s *Server) ListServices(ctx context.Context, req *srv.GetServiceStatusesRe
 }
 
 func (s *Server) EnableService(ctx context.Context, req *srv.GetEnableServiceRequest) (*srv.GetEnableServiceResponse, error) {
-	const op = "systemd.(Server).StartService"
+	const op = "systemd.(Server).EnableService"
 	if err := auth.Authorize(ctx, auth.Update, auth.Systemd); err != nil {
 		return nil, errors.Wrap(op, err, "failed to authorize request")
 	}
@@ -214,7 +214,7 @@ func (s *Server) EnableService(ctx context.Context, req *srv.GetEnableServiceReq
 }
 
 func (s *Server) DisableService(ctx context.Context, req *srv.GetEnableServiceRequest) (*srv.GetEnableServiceResponse, error) {
-	const op = "systemd.(Server).StopService"
+	const op = "systemd.(Server).DisableService"
 	if err := auth.Authorize(ctx, auth.Update, auth.Systemd); err != nil {
 		return nil, errors.Wrap(op, err, "failed to authorize request")
 	}
@@ -350,4 +350,8 @@ func (s *Server) DeleteService(ctx context.Context, req *srv.DeleteServiceReques
 	}
 
 	return nil, nil
+}
+
+func (s *Server) ServiceLogs(ctx context.Context) error {
+	return nil
 }
