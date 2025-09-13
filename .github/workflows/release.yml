@@ -42,7 +42,7 @@ jobs:
         run: |
           chmod +x ./scripts/deps.sh
           make deps
-          apt-get update && apt-get install libsystemd-dev
+          sudo apt install -y libsystemd-dev
       - name: Build
         id: build
         run: |
