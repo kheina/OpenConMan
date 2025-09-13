@@ -70,6 +70,12 @@ service Systemd {
       get: "/v1/service/disable/{name}"
     };
   }
+
+  rpc GetServiceLogs(GetServiceLogsRequest) returns (GetServiceLogsResponse) {
+	option (google.api.http) = {
+      get: "/v1/service/logs/{name}"
+	};
+  }
 }
 
 message GetServiceStatusesRequest {}
@@ -112,4 +118,23 @@ message PutServiceRequest {
 
 message PutServiceResponse {
   server.api.pbs.v1.systemd.UnitStatus item = 10;
+}
+
+message GetServiceLogsRequest {
+  // The primary unit name as a string
+  string name = 10;
+  // How many log messages to retrieve
+  optional uint32 lines = 20;
+  // Seeks to a concrete journal cursor before iterating and returning messages
+  optional string seek = 30;
+}
+
+message LogEntry {
+  uint64 timestamp = 10;
+  string cursor = 20;
+  map<string, string> fields = 30;
+}
+
+message GetServiceLogsResponse {
+  repeated LogEntry logs = 10;
 }

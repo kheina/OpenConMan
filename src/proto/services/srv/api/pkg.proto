@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package server.api.pkg.v1;
+
+import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
+
+option go_package = "github.com/kheina/openconman/src/gen/srv/api/pkg;pkg";
+
+service Packages {
+  option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_tag) = {
+    name: "Package Service"
+    description: "description"
+  };
+
+  rpc GetDaemonUpdate(GetDaemonUpdateRequest)
+      returns (GetDaemonUpdateResponse) {
+    option (google.api.http) = {
+      get: "/v1/pkg/self"
+    };
+  }
+
+  rpc PatchDaemon(PatchDaemonRequest)
+      returns (PatchDaemonResponse) {
+    option (google.api.http) = {
+      patch: "/v1/pkg/self"
+	  body: "*"
+    };
+  }
+}
+
+message GetDaemonUpdateRequest {}
+
+message GetDaemonUpdateResponse {
+  string current = 10;
+  string latest = 20;
+  uint64 asset = 30;
+  bool dev = 40;
+}
+
+message PatchDaemonRequest {
+  // The specific tag of the image to be downloaded and replace the current one
+  string tag = 10;
+}
+
+message PatchDaemonResponse {}

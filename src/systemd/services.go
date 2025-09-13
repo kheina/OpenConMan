@@ -7,6 +7,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/coreos/go-systemd/v22/sdjournal"
+
 	"github.com/kheina/openconman/src/auth"
 	"github.com/kheina/openconman/src/errors"
 	pb "github.com/kheina/openconman/src/gen/pbs/api/systemd"
@@ -168,7 +170,7 @@ func (s *Server) ListServices(ctx context.Context, req *srv.GetServiceStatusesRe
 }
 
 func (s *Server) EnableService(ctx context.Context, req *srv.GetEnableServiceRequest) (*srv.GetEnableServiceResponse, error) {
-	const op = "systemd.(Server).StartService"
+	const op = "systemd.(Server).EnableService"
 	if err := auth.Authorize(ctx, auth.Update, auth.Systemd); err != nil {
 		return nil, errors.Wrap(op, err, "failed to authorize request")
 	}
@@ -214,7 +216,7 @@ func (s *Server) EnableService(ctx context.Context, req *srv.GetEnableServiceReq
 }
 
 func (s *Server) DisableService(ctx context.Context, req *srv.GetEnableServiceRequest) (*srv.GetEnableServiceResponse, error) {
-	const op = "systemd.(Server).StopService"
+	const op = "systemd.(Server).DisableService"
 	if err := auth.Authorize(ctx, auth.Update, auth.Systemd); err != nil {
 		return nil, errors.Wrap(op, err, "failed to authorize request")
 	}
@@ -350,4 +352,65 @@ func (s *Server) DeleteService(ctx context.Context, req *srv.DeleteServiceReques
 	}
 
 	return nil, nil
+}
+
+func (s *Server) GetServiceLogs(ctx context.Context, req *srv.GetServiceLogsRequest) (*srv.GetServiceLogsResponse, error) {
+	const op = "systemd.(Server).GetServiceLogs"
+	if err := auth.Authorize(ctx, auth.Read, auth.Systemd, auth.Logs); err != nil {
+		return nil, errors.Wrap(op, err, "failed to authorize request")
+	}
+
+	switch {
+	case req.Name == "":
+		return nil, errors.New(errors.BadRequest, op, "missing required field: name")
+	}
+
+	j, err := sdjournal.NewJournal()
+	if err != nil {
+		return nil, errors.Wrap(op, err, "failed to create journal")
+	}
+
+	defer j.Close()
+	j.AddMatch((&sdjournal.Match{
+		Field: sdjournal.SD_JOURNAL_FIELD_SYSTEMD_UNIT,
+		Value: req.Name,
+	}).String())
+
+	if req.Seek != nil {
+		if err = j.SeekCursor(*req.Seek); err != nil {
+			return nil, errors.Wrap(op, err, "failed to seek to %d within journal", *req.Seek)
+		}
+	} else if err = j.SeekTail(); err != nil {
+		return nil, errors.Wrap(op, err, "failed to seek to tail within journal")
+	}
+
+	res := &srv.GetServiceLogsResponse{}
+	var lines uint32 = 100
+	if req.Lines != nil {
+		lines = *req.Lines
+	}
+
+	for range lines {
+		n, err := j.Previous()
+		switch {
+		case err != nil:
+			return nil, errors.Wrap(op, err, "failed to iterate within journal")
+		case n == 0:
+			break
+		}
+		entry, err := j.GetEntry()
+		if err != nil {
+			return nil, errors.Wrap(op, err, "failed to retrieve journal entry")
+		}
+		log := &srv.LogEntry{
+			Timestamp: entry.RealtimeTimestamp,
+			Cursor:    entry.Cursor,
+			Fields:    make(map[string]string),
+		}
+		for k, v := range entry.Fields {
+			log.Fields[strings.ToLower(k)] = v
+		}
+		res.Logs = append(res.Logs, log)
+	}
+	return res, nil
 }

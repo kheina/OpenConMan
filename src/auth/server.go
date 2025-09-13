@@ -19,7 +19,6 @@ type Server struct {
 }
 
 func New(opt ...Option) (*Server, error) {
-	const op = "auth.New"
 	opts := getOpts(opt...)
 	s := &Server{
 		logger: opts.withLogger,
@@ -50,6 +49,7 @@ func (s *Server) Login(ctx context.Context, req *srv.PostLoginRequest) (*srv.Pos
 	}
 	return &srv.PostLoginResponse{
 		Token:   stok,
+		Scopes:  user.GetScopes(),
 		Expires: timestamppb.New(exp),
 	}, nil
 }

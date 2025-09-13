@@ -27,6 +27,7 @@ const (
 	Systemd_DeleteService_FullMethodName      = "/server.api.systemd.v1.Systemd/DeleteService"
 	Systemd_EnableService_FullMethodName      = "/server.api.systemd.v1.Systemd/EnableService"
 	Systemd_DisableService_FullMethodName     = "/server.api.systemd.v1.Systemd/DisableService"
+	Systemd_GetServiceLogs_FullMethodName     = "/server.api.systemd.v1.Systemd/GetServiceLogs"
 )
 
 // SystemdClient is the client API for Systemd service.
@@ -41,6 +42,7 @@ type SystemdClient interface {
 	DeleteService(ctx context.Context, in *DeleteServiceRequest, opts ...grpc.CallOption) (*DeleteServiceResponse, error)
 	EnableService(ctx context.Context, in *GetEnableServiceRequest, opts ...grpc.CallOption) (*GetEnableServiceResponse, error)
 	DisableService(ctx context.Context, in *GetEnableServiceRequest, opts ...grpc.CallOption) (*GetEnableServiceResponse, error)
+	GetServiceLogs(ctx context.Context, in *GetServiceLogsRequest, opts ...grpc.CallOption) (*GetServiceLogsResponse, error)
 }
 
 type systemdClient struct {
@@ -131,6 +133,16 @@ func (c *systemdClient) DisableService(ctx context.Context, in *GetEnableService
 	return out, nil
 }
 
+func (c *systemdClient) GetServiceLogs(ctx context.Context, in *GetServiceLogsRequest, opts ...grpc.CallOption) (*GetServiceLogsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetServiceLogsResponse)
+	err := c.cc.Invoke(ctx, Systemd_GetServiceLogs_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SystemdServer is the server API for Systemd service.
 // All implementations must embed UnimplementedSystemdServer
 // for forward compatibility.
@@ -143,6 +155,7 @@ type SystemdServer interface {
 	DeleteService(context.Context, *DeleteServiceRequest) (*DeleteServiceResponse, error)
 	EnableService(context.Context, *GetEnableServiceRequest) (*GetEnableServiceResponse, error)
 	DisableService(context.Context, *GetEnableServiceRequest) (*GetEnableServiceResponse, error)
+	GetServiceLogs(context.Context, *GetServiceLogsRequest) (*GetServiceLogsResponse, error)
 	mustEmbedUnimplementedSystemdServer()
 }
 
@@ -176,6 +189,9 @@ func (UnimplementedSystemdServer) EnableService(context.Context, *GetEnableServi
 }
 func (UnimplementedSystemdServer) DisableService(context.Context, *GetEnableServiceRequest) (*GetEnableServiceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DisableService not implemented")
+}
+func (UnimplementedSystemdServer) GetServiceLogs(context.Context, *GetServiceLogsRequest) (*GetServiceLogsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetServiceLogs not implemented")
 }
 func (UnimplementedSystemdServer) mustEmbedUnimplementedSystemdServer() {}
 func (UnimplementedSystemdServer) testEmbeddedByValue()                 {}
@@ -342,6 +358,24 @@ func _Systemd_DisableService_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Systemd_GetServiceLogs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetServiceLogsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SystemdServer).GetServiceLogs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Systemd_GetServiceLogs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SystemdServer).GetServiceLogs(ctx, req.(*GetServiceLogsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Systemd_ServiceDesc is the grpc.ServiceDesc for Systemd service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -380,6 +414,10 @@ var Systemd_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DisableService",
 			Handler:    _Systemd_DisableService_Handler,
+		},
+		{
+			MethodName: "GetServiceLogs",
+			Handler:    _Systemd_GetServiceLogs_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

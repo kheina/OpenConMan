@@ -21,6 +21,8 @@ const (
 	Alias      = auth.SCOPE_ALIAS
 	Containers = auth.SCOPE_CONTAINERS
 	Systemd    = auth.SCOPE_SYSTEMD
+	Daemon     = auth.SCOPE_DAEMON
+	Logs       = auth.SCOPE_LOGS
 )
 
 func ActionToString(a auth.ACTION) string {

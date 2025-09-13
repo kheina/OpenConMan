@@ -19,7 +19,9 @@ import (
 	"github.com/kheina/openconman/src/errors"
 	srvauth "github.com/kheina/openconman/src/gen/srv/api/auth"
 	"github.com/kheina/openconman/src/gen/srv/api/docker"
+	srvpkg "github.com/kheina/openconman/src/gen/srv/api/pkg"
 	srvsys "github.com/kheina/openconman/src/gen/srv/api/systemd"
+	"github.com/kheina/openconman/src/pkg"
 	"github.com/kheina/openconman/src/systemd"
 )
 
@@ -87,6 +89,11 @@ func Handler(ctx context.Context, gs *grpc.Server, grpcAddr string, logger hclog
 	} else {
 		srvauth.RegisterAuthServer(gs, srv)
 	}
+	if srv, err := pkg.New(); err != nil {
+		return nil, fmt.Errorf("%s: failed to create pkg server: %w", op, err)
+	} else {
+		srvpkg.RegisterPackagesServer(gs, srv)
+	}
 
 	// register all the different grpc handlers
 	// NOTE: this MUST be done at the same time as registering the servers
@@ -98,6 +105,9 @@ func Handler(ctx context.Context, gs *grpc.Server, grpcAddr string, logger hclog
 	}
 	if err = srvauth.RegisterAuthHandler(ctx, gwmux, conn); err != nil {
 		return nil, fmt.Errorf("%s: failed to register auth gateway: %w", op, err)
+	}
+	if err = srvpkg.RegisterPackagesHandler(ctx, gwmux, conn); err != nil {
+		return nil, fmt.Errorf("%s: failed to register pkg gateway: %w", op, err)
 	}
 
 	return gwmux, nil
