@@ -42,6 +42,7 @@ jobs:
         run: |
           chmod +x ./scripts/deps.sh
           make deps
+          apt-get update && apt-get install libsystemd-dev
       - name: Build
         id: build
         run: |
@@ -49,6 +50,7 @@ jobs:
           make build-ui
           echo "exec=bin/conman" >> "$GITHUB_OUTPUT"
       - name: Create Release
+        if: success() && steps.build.outputs.exec == 'bin/conman'
         uses: softprops/action-gh-release@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
