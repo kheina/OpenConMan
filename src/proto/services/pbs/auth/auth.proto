@@ -15,8 +15,8 @@ enum SCOPE {
   SYSTEMD = 3;
   ALIAS = 4;
   CONTAINERS = 5;
-  DAEMON = 6;
-  LOGS = 7;
+  LOGS = 6;
+  DAEMON = 7;
 }
 
 // Action refers to a user action that is occurring within a given scope

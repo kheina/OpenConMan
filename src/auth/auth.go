@@ -38,7 +38,7 @@ func Login(name string, password []byte) (*config.UserConfig, error) {
 	const op = "auth.Login"
 	conf, err := config.Read(strings.ToLower(name))
 	if err != nil {
-		return nil, errors.Wrap(op, err, "failed to read user")
+		return nil, errors.Wrap(op, err, "failed to read user", errors.WithStatusCode(errors.Unauthorized), errors.WithErrorCode(loginFailed))
 	}
 
 	// check for all available authentication methods
@@ -47,10 +47,10 @@ func Login(name string, password []byte) (*config.UserConfig, error) {
 		hash := &argonpb.Argon2Hash{}
 		hashdata, err := base64.RawURLEncoding.AppendDecode([]byte{}, conf.Password.Hash)
 		if err != nil {
-			return nil, errors.Wrap(op, err, "failed to decode user password data")
+			return nil, errors.Wrap(op, err, "failed to decode user password data", errors.WithStatusCode(errors.Unauthorized), errors.WithErrorCode(loginFailed))
 		}
 		if err = proto.Unmarshal(hashdata, hash); err != nil {
-			return nil, errors.Wrap(op, err, "failed to unmarshal user password hash")
+			return nil, errors.Wrap(op, err, "failed to unmarshal user password hash", errors.WithStatusCode(errors.Unauthorized), errors.WithErrorCode(loginFailed))
 		}
 		rehash := argon2.IDKey(password, hash.Salt, hash.Config.Time, hash.Config.Memory*1024, uint8(hash.Config.Parallelism), hash.Config.HashLength)
 		if subtle.ConstantTimeCompare(hash.Hash, rehash) != 1 {
@@ -58,7 +58,7 @@ func Login(name string, password []byte) (*config.UserConfig, error) {
 		}
 		return conf, nil
 	default:
-		return nil, errors.New(errors.Unauthorized, op, "user config does not contain an authentication method", errors.WithErrorCode(loginFailed))
+		return nil, errors.New(errors.Unauthorized, op, "user config does not contain a valid authentication method", errors.WithErrorCode(loginFailed))
 	}
 }
 
@@ -202,7 +202,7 @@ func Authorize(ctx context.Context, action pb.ACTION, scopes ...pb.SCOPE) error 
 	if len(parts) != 2 {
 		return errors.New(errors.Unauthorized, op, "failed to parse auth token", errors.WithErrorCode(tokenInvalid))
 	}
-	in, sig, err := []byte{}, []byte{}, error(nil)
+	in, sig, err := []byte(nil), []byte(nil), error(nil)
 	if in, err = base64.RawURLEncoding.DecodeString(parts[0]); err != nil {
 		return errors.New(errors.Unauthorized, op, "failed to decode auth token. ensure auth token is base64 encoded", errors.WithErrorCode(tokenInvalid))
 	}
@@ -263,7 +263,7 @@ func match(a []pb.ACTION, action pb.ACTION) bool {
 	return false
 }
 
-func err(op string, action pb.ACTION, scopes []pb.SCOPE) error {
+func newForbiddenErr(op string, action pb.ACTION, scopes []pb.SCOPE) error {
 	scope := ""
 	for _, s := range scopes {
 		scope += ScopeToString(s) + ":"
@@ -301,15 +301,15 @@ func CheckPermission(p Permissions, action pb.ACTION, scopes ...pb.SCOPE) error 
 	}
 	for _, s := range scopes {
 		if p = hasScope(p, s); p == nil {
-			return err(op, action, scopes)
+			return newForbiddenErr(op, action, scopes)
 		}
 	}
 	pp, ok := p.(*user.Permission)
 	if !ok {
-		return err(op, action, scopes)
+		return newForbiddenErr(op, action, scopes)
 	}
 	if allowed(pp, action) {
 		return nil
 	}
-	return err(op, action, scopes)
+	return newForbiddenErr(op, action, scopes)
 }

@@ -20,11 +20,10 @@ service Packages {
     };
   }
 
-  rpc PatchDaemon(PatchDaemonRequest)
-      returns (PatchDaemonResponse) {
+  rpc PatchDaemon(PatchDaemonRequest) returns (PatchDaemonResponse) {
     option (google.api.http) = {
       patch: "/v1/pkg/self"
-	  body: "*"
+      body: "*"
     };
   }
 }
@@ -34,8 +33,9 @@ message GetDaemonUpdateRequest {}
 message GetDaemonUpdateResponse {
   string current = 10;
   string latest = 20;
-  uint64 asset = 30;
+  optional uint64 asset = 30;
   bool dev = 40;
+  bool newer = 50;
 }
 
 message PatchDaemonRequest {

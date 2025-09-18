@@ -47,6 +47,9 @@ func Handler(ctx context.Context, gs *grpc.Server, grpcAddr string, logger hclog
 		grpcopts = append(grpcopts, grpc.WithTransportCredentials(credentials.NewClientTLSFromCert(pool, name)))
 	}
 
+	// in order to emit rich errors, we must set the error logger here
+	errors.SetLogger(logger)
+
 	conn, err := grpc.NewClient(grpcAddr, grpcopts...)
 	if err != nil {
 		return nil, fmt.Errorf("%s: failed to dial gRPC server: %w", op, err)
@@ -74,7 +77,7 @@ func Handler(ctx context.Context, gs *grpc.Server, grpcAddr string, logger hclog
 
 	// register all of the different grpc servers
 	// NOTE: this MUST be done at the same time as registering the handlers
-	if srv, err := containers.NewServer(); err != nil {
+	if srv, err := containers.NewServer(logger); err != nil {
 		return nil, fmt.Errorf("%s: failed to create containers server: %w", op, err)
 	} else {
 		docker.RegisterContainerServer(gs, srv)

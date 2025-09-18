@@ -182,19 +182,19 @@ func (s *Server) EnableService(ctx context.Context, req *srv.GetEnableServiceReq
 
 	s.logger.Debug("enable", "op", op, "dbus", s.dbus)
 	if _, _, err := s.dbus.EnableUnitFilesContext(ctx, []string{req.Name}, false, false); err != nil {
-		return nil, errors.Wrap(op, err, "failed to enable %s", req.Name)
+		return nil, errors.Wrap(op, err, fmt.Sprintf("failed to enable %s", req.Name))
 	}
 
 	s.logger.Debug("start", "op", op, "dbus", s.dbus)
 	if _, err := s.dbus.StartUnitContext(ctx, req.Name, "replace", nil); err != nil {
-		return nil, errors.Wrap(op, err, "failed to start %s", req.Name)
+		return nil, errors.Wrap(op, err, fmt.Sprintf("failed to start %s", req.Name))
 	}
 
 	s.logger.Debug("list", "op", op, "dbus", s.dbus)
 	units, err := s.dbus.ListUnitsByNamesContext(ctx, []string{req.Name})
 	switch {
 	case err != nil:
-		return nil, errors.Wrap(op, err, "failed to fetch unit: %s", req.Name)
+		return nil, errors.Wrap(op, err, fmt.Sprintf("failed to fetch unit: %s", req.Name))
 	case len(units) != 1:
 		return nil, errors.New(errors.Internal, op, fmt.Sprintf("failed to fetch unit: %s", req.Name))
 	}
@@ -228,19 +228,19 @@ func (s *Server) DisableService(ctx context.Context, req *srv.GetEnableServiceRe
 
 	s.logger.Debug("stop", "op", op, "dbus", s.dbus)
 	if _, err := s.dbus.StopUnitContext(ctx, req.Name, "fail", nil); err != nil {
-		return nil, errors.Wrap(op, err, "failed to stop %s", req.Name)
+		return nil, errors.Wrap(op, err, fmt.Sprintf("failed to stop %s", req.Name))
 	}
 
 	s.logger.Debug("disable", "op", op, "dbus", s.dbus)
 	if _, err := s.dbus.DisableUnitFilesContext(ctx, []string{req.Name}, false); err != nil {
-		return nil, errors.Wrap(op, err, "failed to disable %s", req.Name)
+		return nil, errors.Wrap(op, err, fmt.Sprintf("failed to disable %s", req.Name))
 	}
 
 	s.logger.Debug("list", "op", op, "dbus", s.dbus)
 	units, err := s.dbus.ListUnitsByNamesContext(ctx, []string{req.Name})
 	switch {
 	case err != nil:
-		return nil, errors.Wrap(op, err, "failed to fetch unit: %s", req.Name)
+		return nil, errors.Wrap(op, err, fmt.Sprintf("failed to fetch unit: %s", req.Name))
 	case len(units) != 1:
 		return nil, errors.New(errors.Internal, op, fmt.Sprintf("failed to fetch unit: %s", req.Name))
 	}
@@ -356,6 +356,8 @@ func (s *Server) DeleteService(ctx context.Context, req *srv.DeleteServiceReques
 
 func (s *Server) GetServiceLogs(ctx context.Context, req *srv.GetServiceLogsRequest) (*srv.GetServiceLogsResponse, error) {
 	const op = "systemd.(Server).GetServiceLogs"
+	// the max number of lines able to be returned by the endpoint
+	const maxlines = 1000
 	if err := auth.Authorize(ctx, auth.Read, auth.Systemd, auth.Logs); err != nil {
 		return nil, errors.Wrap(op, err, "failed to authorize request")
 	}
@@ -378,25 +380,28 @@ func (s *Server) GetServiceLogs(ctx context.Context, req *srv.GetServiceLogsRequ
 
 	if req.Seek != nil {
 		if err = j.SeekCursor(*req.Seek); err != nil {
-			return nil, errors.Wrap(op, err, "failed to seek to %d within journal", *req.Seek)
+			return nil, errors.Wrap(op, err, fmt.Sprintf("failed to seek to \"%s\" within journal", *req.Seek))
 		}
 	} else if err = j.SeekTail(); err != nil {
 		return nil, errors.Wrap(op, err, "failed to seek to tail within journal")
 	}
 
-	res := &srv.GetServiceLogsResponse{}
+	res := &srv.GetServiceLogsResponse{
+		Name: req.Name,
+	}
 	var lines uint32 = 100
 	if req.Lines != nil {
-		lines = *req.Lines
+		lines = min(*req.Lines, maxlines)
 	}
 
+lines:
 	for range lines {
 		n, err := j.Previous()
 		switch {
 		case err != nil:
 			return nil, errors.Wrap(op, err, "failed to iterate within journal")
 		case n == 0:
-			break
+			break lines
 		}
 		entry, err := j.GetEntry()
 		if err != nil {

@@ -1,8 +1,8 @@
 <template>
-	<div class='logo'>
-		<a href='https://github.com/kheina/openconman'>openconman</a>
-	</div>
-	<div class='sidebar'>
+	<div class='sidebar' v-if='auth'>
+		<div class='logo'>
+			<a href='https://github.com/kheina/openconman'>openconman</a>
+		</div>
 		<nav>
 			<ol>
 				<li>
@@ -42,47 +42,95 @@
 				<li>
 					<div>
 						<div/>
-						<RouterLink to='/user/login'>Login</RouterLink>
+						<RouterLink to='/user'>User</RouterLink>
 					</div>
 				</li>
 			</ol>
 		</nav>
+		<div v-if='update?.newer' class='update'>
+			update available
+		</div>
 	</div>
 	<div class='view'>
 		<RouterView/>
 	</div>
 </template>
 <script setup lang='ts'>
-import { RouterLink, RouterView } from 'vue-router';
+import { RouterLink, RouterView, useRouter } from 'vue-router';
+import { ref, watch, type Ref } from 'vue';
+import { auth } from '@/globals';
+import { cetch, GetCookie } from '@/utilities';
+
+interface Update {
+	current: string,
+	latest:  string,
+	assert?: string,
+	dev?:    boolean,
+	newer?:  boolean,
+}
+
+const router = useRouter();
+const update: Ref<undefined | Update> = ref();
+
+auth.value = GetCookie("ocm-auth");
+if (auth.value) checkForUpdate();
+
+function checkForUpdate() {
+	cetch(
+		"/v1/pkg/self"
+	).then(
+		r => r.json()
+	).then((r: Update) =>
+		update.value = r
+	).catch(
+		console.error
+	);
+}
+
+watch(auth, (auth: string | undefined) => {
+	if (auth) {
+		router.replace("/");
+		checkForUpdate();
+	} else {
+		router.replace("/user/login");
+	}
+});
 </script>
 <style>
 body {
-	display: grid;
-	grid-template-columns: [sidebar-start] 15em [sidebar-end] 0 [view-start] 1fr [view-end];
+	display: flex;
+	flex-direction: row;
 }
 .sidebar {
-	grid-area: sidebar;
-	max-width: 100%;
+	flex-shrink: 0;
+	width: 15em;
 	margin: var(--half-margin) var(--border-size) var(--half-margin) 0;
 	display: flex;
 	align-items: center;
 	border-right: var(--border-size) solid var(--border-color);
+	position: relative;
 }
 .view {
-	grid-area: view;
 	height: 100vh;
 	max-height: 100vh;
 	overflow: auto;
 	position: relative;
+	flex-grow: 1;
+	width: 100%;
 }
-.logo {
+.logo, .update {
 	position: absolute;
-	top: 0;
-	width: 15em;
+	width: 100%;
 	height: 3em;
 	display: flex;
 	align-items: center;
 	justify-content: center;
+}
+.logo {
+	top: var(--neg-half-margin);
+}
+.update {
+	bottom: var(--neg-half-margin);
 }
 nav {
 	width: 100%;

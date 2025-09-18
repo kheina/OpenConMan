@@ -63,8 +63,9 @@ type GetDaemonUpdateResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Current       string                 `protobuf:"bytes,10,opt,name=current,proto3" json:"current,omitempty"`
 	Latest        string                 `protobuf:"bytes,20,opt,name=latest,proto3" json:"latest,omitempty"`
-	Asset         uint64                 `protobuf:"varint,30,opt,name=asset,proto3" json:"asset,omitempty"`
+	Asset         *uint64                `protobuf:"varint,30,opt,name=asset,proto3,oneof" json:"asset,omitempty"`
 	Dev           bool                   `protobuf:"varint,40,opt,name=dev,proto3" json:"dev,omitempty"`
+	Newer         bool                   `protobuf:"varint,50,opt,name=newer,proto3" json:"newer,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -114,8 +115,8 @@ func (x *GetDaemonUpdateResponse) GetLatest() string {
 }
 
 func (x *GetDaemonUpdateResponse) GetAsset() uint64 {
-	if x != nil {
-		return x.Asset
+	if x != nil && x.Asset != nil {
+		return *x.Asset
 	}
 	return 0
 }
@@ -123,6 +124,13 @@ func (x *GetDaemonUpdateResponse) GetAsset() uint64 {
 func (x *GetDaemonUpdateResponse) GetDev() bool {
 	if x != nil {
 		return x.Dev
+	}
+	return false
+}
+
+func (x *GetDaemonUpdateResponse) GetNewer() bool {
+	if x != nil {
+		return x.Newer
 	}
 	return false
 }
@@ -213,13 +221,15 @@ var File_services_srv_api_pkg_proto protoreflect.FileDescriptor
 const file_services_srv_api_pkg_proto_rawDesc = "" +
 	"\n" +
 	"\x1aservices/srv/api/pkg.proto\x12\x11server.api.pkg.v1\x1a\x1cgoogle/api/annotations.proto\x1a.protoc-gen-openapiv2/options/annotations.proto\"\x18\n" +
-	"\x16GetDaemonUpdateRequest\"s\n" +
+	"\x16GetDaemonUpdateRequest\"\x98\x01\n" +
 	"\x17GetDaemonUpdateResponse\x12\x18\n" +
 	"\acurrent\x18\n" +
 	" \x01(\tR\acurrent\x12\x16\n" +
-	"\x06latest\x18\x14 \x01(\tR\x06latest\x12\x14\n" +
-	"\x05asset\x18\x1e \x01(\x04R\x05asset\x12\x10\n" +
-	"\x03dev\x18( \x01(\bR\x03dev\"&\n" +
+	"\x06latest\x18\x14 \x01(\tR\x06latest\x12\x19\n" +
+	"\x05asset\x18\x1e \x01(\x04H\x00R\x05asset\x88\x01\x01\x12\x10\n" +
+	"\x03dev\x18( \x01(\bR\x03dev\x12\x14\n" +
+	"\x05newer\x182 \x01(\bR\x05newerB\b\n" +
+	"\x06_asset\"&\n" +
 	"\x12PatchDaemonRequest\x12\x10\n" +
 	"\x03tag\x18\n" +
 	" \x01(\tR\x03tag\"\x15\n" +
@@ -265,6 +275,7 @@ func file_services_srv_api_pkg_proto_init() {
 	if File_services_srv_api_pkg_proto != nil {
 		return
 	}
+	file_services_srv_api_pkg_proto_msgTypes[1].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

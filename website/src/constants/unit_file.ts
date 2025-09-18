@@ -1,5 +1,5 @@
-export default `[Unit]
-# delete lines you don't need!
+export default `# delete lines you don't need!
+[Unit]
 Description=[OpenConMan]
 Documentation=nowhere.yet
 StartLimitIntervalSec=60

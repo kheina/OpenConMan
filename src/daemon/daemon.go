@@ -57,10 +57,10 @@ func (c *controller) Create(ctx context.Context, args []string) error {
 func (c *controller) Enable(ctx context.Context) error {
 	const op = "daemon.(controller).Enable"
 	if _, _, err := c.dbus.EnableUnitFilesContext(ctx, []string{service}, false, false); err != nil {
-		return errors.Wrap(op, err, "failed to enable %s", service)
+		return errors.Wrap(op, err, fmt.Sprintf("failed to enable %s", service))
 	}
 	if _, err := c.dbus.StartUnitContext(ctx, service, "replace", nil); err != nil {
-		return errors.Wrap(op, err, "failed to start %s", service)
+		return errors.Wrap(op, err, fmt.Sprintf("failed to start %s", service))
 	}
 	fmt.Printf("enabled %s\n", service)
 	return nil
@@ -69,10 +69,10 @@ func (c *controller) Enable(ctx context.Context) error {
 func (c *controller) Disable(ctx context.Context) error {
 	const op = "daemon.(controller).Disable"
 	if _, err := c.dbus.StopUnitContext(ctx, service, "fail", nil); err != nil {
-		return errors.Wrap(op, err, "failed to start %s", service)
+		return errors.Wrap(op, err, fmt.Sprintf("failed to start %s", service))
 	}
 	if _, err := c.dbus.DisableUnitFilesContext(ctx, []string{service}, false); err != nil {
-		return errors.Wrap(op, err, "failed to disable %s", service)
+		return errors.Wrap(op, err, fmt.Sprintf("failed to disable %s", service))
 	}
 	return nil
 }

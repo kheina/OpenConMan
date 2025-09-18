@@ -24,3 +24,19 @@ export interface UnitStatus {
 	// The name of the alias, if it exists
 	alias?: string,
 }
+
+export interface LogEntry {
+	// uint64 unix timestamp value in milliseconds, as a string
+	timestamp: string,
+	// cursor is a unique identifier for the log, and can be used as a continuation
+	// token for retrieving more logs from this point in the journal
+	cursor: string,
+	// fields is the data contained within the log entry. can be any string based
+	// data, but at least "message" is always populated
+	fields: { [k: string]: string; },
+}
+
+export interface UnitLogs {
+	name: string,
+	logs: LogEntry[],
+}

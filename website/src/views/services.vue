@@ -30,13 +30,16 @@
 					<button @click='() => DeleteService(u)' v-else>
 						delete
 					</button>
+					<button @click='() => GetServiceLogs(u)'>
+						logs
+					</button>
 				</div>
 			</div>
 			<div class='editor' v-if='newUnitContent'>
 				<div>
 					<div>
 						<span>{{ (!newUnitName || newUnitName.endsWith(".service")) ? newUnitName : newUnitName + ".service" }}</span>
-						<i class='material-icons-round' @click='() => newUnitContent = undefined'>close</i>
+						<i class='material-icons-round' @click='() => newUnitName = newUnitContent = undefined'>close</i>
 					</div>
 					<CodeEditor class='code-editor' v-model:value='newUnitContent'/>
 					<div>
@@ -50,6 +53,23 @@
 					</div>
 				</div>
 			</div>
+			<div class='logs' v-else-if='logs'>
+				<div>
+					<div>
+						<span>logs: {{ logs.name }}</span>
+						<i class='material-icons-round' @click='() => logs = undefined'>close</i>
+					</div>
+					<div v-if='logs.logs'>
+						<code v-for='l in logs.logs'>{{ l.fields["message"] }}</code>
+						<button  @click='() => GetServiceLogs(logs ?? { name: "" })' v-show='logs.logs.length % 100 === 0'>load more</button>
+					</div>
+					<div v-else>
+						<div>
+							none
+						</div>
+					</div>
+				</div>
+			</div>
 		</main>
 	</div>
 	<div class='loading' v-else>
@@ -58,7 +78,7 @@
 </template>
 <script setup lang='ts'>
 import { onMounted, onUnmounted, ref, type Ref } from 'vue';
-import type { UnitStatus } from '@/types/systemd'; 
+import type { UnitLogs, UnitStatus } from '@/types/systemd'; 
 import unitfiletemplate from '@/constants/unit_file';
 import CodeEditor from '@/components/CodeEditor.vue';
 import { cetch } from '@/utilities';
@@ -69,13 +89,14 @@ const units: Ref<UnitStatus[] | null> = ref(null);
 const update: Ref<number | undefined> = ref();
 const newUnitContent: Ref<string | undefined> = ref();
 const newUnitName: Ref<string | undefined> = ref();
+const logs: Ref<UnitLogs | undefined> = ref();
 
 onMounted(() => update.value = Updater());
 onUnmounted(() => update.value = clearTimeout(update.value) ?? undefined);
 
 function StartService(u: UnitStatus) {
 	cetch(
-		`${host}/v1/service/enable/${u.name}`
+		`/v1/service/enable/${u.name}`
 	).then(
 		r => r.json()
 	).then((r: { item: UnitStatus }) => {
@@ -90,7 +111,7 @@ function StartService(u: UnitStatus) {
 
 function StopService(u: UnitStatus) {
 	cetch(
-		`${host}/v1/service/disable/${u.name}`
+		`/v1/service/disable/${u.name}`
 	).then(
 		r => r.json()
 	).then((r: { item: UnitStatus }) => {
@@ -105,7 +126,7 @@ function StopService(u: UnitStatus) {
 
 function DeleteAlias(u: UnitStatus) {
 	if (!u.alias) return;
-	cetch(`${host}/v1/service/alias/${u.alias}`, {
+	cetch(`/v1/service/alias/${u.alias}`, {
 		method: "DELETE",
 	}).catch(
 		console.error
@@ -113,15 +134,30 @@ function DeleteAlias(u: UnitStatus) {
 }
 
 function DeleteService(u: UnitStatus) {
-	cetch(`${host}/v1/service/${u.name}`, {
+	cetch(`/v1/service/${u.name}`, {
 		method: "DELETE",
 	}).catch(
 		console.error
 	);
 }
 
+function GetServiceLogs(u: { name: string }) {
+	let url = `/v1/service/logs/${u.name}`
+	if (logs.value) url += "?seek=" + encodeURIComponent(logs.value.logs[logs.value.logs.length-1].cursor);
+	cetch(url, {
+		method: "GET",
+	}).then(
+		r => r.json()
+	).then((r: UnitLogs) => {
+		if (logs.value) logs.value.logs = logs.value.logs.concat(r.logs);
+		else logs.value = r;
+	}).catch(
+		console.error
+	);
+}
+
 function CreateService() {
-	cetch(`${host}/v1/service`, {
+	cetch("/v1/service", {
 		method: "PUT",
 		body: JSON.stringify({
 			name: newUnitName.value,
@@ -139,7 +175,7 @@ function CreateService() {
 
 function Updater(): number {
 	cetch(
-		`${host}/v1/services`
+		"/v1/services"
 	).then(
 		r => r.json()
 	).then((r:{ items: UnitStatus[] }) =>
@@ -230,7 +266,11 @@ main {
 }
 .buttons {
 	display: flex;
-	flex-direction: column;
+	flex-direction: row;
+	align-items: flex-start;
+	justify-content: flex-end;
+	flex-wrap: wrap;
+	flex-shrink: 1;
 }
 button {
 	color: inherit;
@@ -250,10 +290,11 @@ button {
 	transition: var(--transition) var(--fadetime);
 }
 button:last-child {
-	margin: 0;
+	margin-bottom: 0;
 }
 .service button {
 	background: var(--bg2);
+	margin: 0 0 1em 1em;
 }
 button:hover {
 	border-color: var(--borderhover);
@@ -299,11 +340,11 @@ input:focus {
 .editor {
 	position: absolute;
 	width: 100%;
-	height: calc(100vh - 3em);
+	height: 100vh;
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	top: 3em;
+	top: 0;
 
 	&>div {
 		background: var(--bg3);
@@ -311,8 +352,8 @@ input:focus {
 		display: flex;
 		flex-direction: column;
 		box-shadow: 0 2px 3px 1px var(--shadowcolor);
-		max-height: calc(100% - var(--margin) * 2);
-		max-width: calc(100% - var(--margin) * 2);
+		max-height: calc(100% - 2em);
+		max-width: calc(100% - 2em);
 
 		&>div:first-child {
 			display: flex;
@@ -367,9 +408,80 @@ input:focus {
 			background: var(--bg1);
 			min-width: 40em;
 			min-height: 10em;
-			max-height: 80vh;
-			max-width: 100%;
+			/* max-height: 80vh;
+			max-width: 100%; */
 			overflow: scroll;
+		}
+	}
+}
+
+.logs {
+	position: absolute;
+	width: 100%;
+	height: 100vh;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	top: 0;
+
+	&>div {
+		background: var(--bg3);
+		border-radius: var(--border-radius);
+		display: flex;
+		flex-direction: column;
+		box-shadow: 0 2px 3px 1px var(--shadowcolor);
+		max-height: calc(100% - 2em);
+		max-width: calc(100% - 2em);
+		overflow: hidden;
+
+		&>div:first-child {
+			display: flex;
+			color: var(--subtle);
+			flex-direction: row;
+			align-items: center;
+			justify-content: space-between;
+
+			&>i {
+				cursor: pointer;
+				-webkit-transition: var(--transition) var(--fadetime);
+				-moz-transition: var(--transition) var(--fadetime);
+				-o-transition: var(--transition) var(--fadetime);
+				transition: var(--transition) var(--fadetime);
+
+				&:hover {
+					color: var(--red);
+				}
+			}
+
+			&>span {
+				margin-left: 0.3em;
+			}
+		}
+
+		&>div:last-child {
+			border-radius: 0;
+			background: var(--bg1);
+			min-width: 40em;
+			min-height: 10em;
+			overflow: scroll;
+			padding: 0.25em;
+			display: flex;
+			flex-direction: column-reverse;
+
+			&>div {
+				margin: auto;
+			}
+
+			code {
+				white-space: preserve-spaces;
+				text-wrap: wrap;
+				line-height: 1.2em;
+			}
+
+			button {
+				align-self: center;
+				margin: 0.5em;
+			}
 		}
 	}
 }

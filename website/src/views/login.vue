@@ -17,9 +17,8 @@
 </template>
 <script setup lang='ts'>
 import { ref, type Ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { auth } from '@/globals';
 
-const router = useRouter();
 const username: Ref<string> = ref("");
 const password: Ref<string> = ref("");
 const host = `${window.location.protocol}//${window.location.hostname}:5050`;
@@ -31,14 +30,22 @@ function sendLogin() {
 			username: username.value,
 			password: password.value,
 		}),
-	}).then(
-		r => r.json()
-	).then((r: { token: string, expires: string }) => {
+	}).then((r: Response) => {
+		switch (r.status) {
+		case 200:
+			return r.json();
+		case 400:
+		case 401:
+		case 404:
+		default:
+			// TODO: create toast
+			throw r;
+		}
+	}).then((r: { token: string, expires: string }) => {
+		auth.value = r.token;
 		const maxage = Math.round((new Date(r.expires).valueOf() - new Date().valueOf()) / 1000);
 		document.cookie = `ocm-auth=${r.token}; max-age=${maxage}; samesite=strict; path=/; secure`;
-	}).then(() =>
-		router.push("/")
-	).catch(
+	}).catch(
 		console.error
 	);
 }

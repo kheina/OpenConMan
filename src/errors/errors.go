@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/hashicorp/go-hclog"
 	"google.golang.org/grpc/status"
 
 	pb "github.com/kheina/openconman/src/gen/pbs/api/error"
@@ -37,6 +38,8 @@ func (e *ApiError) GRPCStatus() *status.Status {
 }
 
 // New returns a new *ApiError in the stdlib error interface
+//
+// Supported Options: WithErrorCode
 func New(status Status, op, msg string, opt ...Option) error {
 	opts := getOpts(opt...)
 
@@ -71,20 +74,28 @@ func (e *WrappedError) Unwrap() error {
 	return e.underlying
 }
 
-// Wrap takes an existing error and wraps it with additional information. any additional args are passed directly to fmt.Errorf
-func Wrap(op string, err error, msg string, arg ...any) error {
+// Wrap takes an existing error and wraps it with additional information.
+//
+// Supported Options: WithStatusCode, WithErrorCode
+func Wrap(op string, err error, msg string, opt ...Option) error {
 	apierr := &ApiError{}
+	msg = fmt.Errorf("%s: %s: %w", op, msg, err).Error()
 	if !errors.As(err, &apierr) {
 		guid := uuid.New()
 		dst := make([]byte, 32)
 		_ = hex.Encode(dst, guid[:])
 
+		opts := getOpts(opt...)
+		if opts.withErrorCode == "" {
+			opts.withErrorCode = opts.withStatusCode.String()
+		}
+
 		return &WrappedError{
-			msg: fmt.Errorf("%s: %w: %w", op, fmt.Errorf(msg, arg...), err).Error(),
+			msg: msg,
 			underlying: &ApiError{
 				&pb.ApiError{
-					Status:  500,
-					Code:    httpStatusToErrorCode(500),
+					Status:  uint32(opts.withStatusCode),
+					Code:    opts.withErrorCode,
 					Message: err.Error(),
 					Refid:   string(dst),
 				},
@@ -92,26 +103,46 @@ func Wrap(op string, err error, msg string, arg ...any) error {
 		}
 	}
 	return &WrappedError{
-		msg:        fmt.Errorf("%s: %s: %w", op, msg, err).Error(),
+		msg:        msg,
 		underlying: err,
 	}
 }
 
+var logger hclog.Logger = hclog.NewNullLogger()
+
+func SetLogger(l hclog.Logger) {
+	logger = l
+}
+
 func (e *WrappedError) GRPCStatus() *status.Status {
 	var kerr *ApiError
+	// GRPCStatus is called after the api handler has returned and the err is
+	// getting encoded over the wire for grpc gateway. therefore, we log the
+	// error in its entirety here so that none of the extra information is lost
+	// before transferring it
+	logger.Error(Tree(e))
 	if !errors.As(e, &kerr) {
 		return nil
 	}
 	return kerr.GRPCStatus()
 }
 
-func dumpErr(w io.Writer, i string, err any) {
+type errv struct {
+	key   string
+	value any
+}
+
+func dumpErr(w io.Writer, i string, err any, fin bool) {
 	v := reflect.ValueOf(err)
 	for {
 		switch v.Kind() {
 		case reflect.Struct:
+			m := v.NumField()
+			errvs := []errv{}
+			structs := []errv{}
+			mk := 0
 		fields:
-			for n := range v.NumField() {
+			for n := range m {
 				f := v.Field(n)
 				k := v.Type().Field(n).Name
 				switch f.Kind() {
@@ -123,14 +154,34 @@ func dumpErr(w io.Writer, i string, err any) {
 					if !f.CanInterface() {
 						continue fields
 					}
-					fmt.Fprintf(w, "\n%s%s%v:", i, "├ ", k)
-					dumpErr(w, i+"│ ", f.Interface())
-					return
+					structs = append(structs, errv{
+						key:   k,
+						value: f.Interface(),
+					})
+					break fields
 				}
 				if !f.CanInterface() {
-					return
+					break
 				}
-				fmt.Fprintf(w, "\n%s%s%v: %v", i, "├ ", k, f.Interface())
+				mk = max(mk, len(k))
+				errvs = append(errvs, errv{
+					key:   k,
+					value: f.Interface(),
+				})
+			}
+			for n, s := range structs {
+				fmt.Fprintf(w, "\n%s%s%v:", i, "├ ", s.key)
+				dumpErr(w, i+"│ ", s.value, n+1 == len(structs))
+			}
+			for n, value := range errvs {
+				j := i + "├ "
+				if n+1 == len(errvs) {
+					if fin && len(i) >= 4 {
+						i = i[:len(i)-4] + "└ "
+					}
+					j = i + "└ "
+				}
+				fmt.Fprintf(w, "\n%s%s:%s %v", j, value.key, strings.Repeat(" ", mk-len(value.key)), value.value)
 			}
 			return
 		case reflect.Pointer:
@@ -142,74 +193,50 @@ func dumpErr(w io.Writer, i string, err any) {
 	}
 }
 
-func Tree(err error) string {
-	var buf bytes.Buffer
-	i := ""
+func tree(w io.Writer, i string, err error, fin bool) {
+	// fmt.Printf("tree: %s\n", err)
 	for err != nil {
+		t := "├ "
+		switch {
+		case i == "":
+			t = ""
+		case fin:
+			t = "└ "
+		}
+
 		switch x := err.(type) {
 		case interface{ Unwrap() error }:
 			e := x.Unwrap()
-			// json.Marshal()
-			dumpErr(&buf, i, err)
-			t := "└ "
-			if i == "" {
-				t = ""
-			}
 			if e != nil {
-				fmt.Fprintf(&buf, "\n%s%s%s", i, t, strings.TrimSuffix(err.Error(), fmt.Sprintf(": %s", e)))
+				fmt.Fprintf(w, "\n%s%s%s", i, t, strings.TrimSuffix(err.Error(), fmt.Sprintf(": %s", e)))
 			} else {
-				fmt.Fprintf(&buf, "\n%s%s%s", i, t, err)
+				fmt.Fprintf(w, "\n%s%s%s", i, t, err)
 			}
+			dumpErr(w, i, err, false)
 			err = e
-		// case interface{ Unwrap() []error }:
-		// 	for _, err = range x.Unwrap() {
-		// 		tree(node, err)
-		// 	}
-		// 	err = nil
-		default:
-			dumpErr(&buf, i, err)
-			t := "└ "
-			if i == "" {
-				t = ""
+		case interface{ Unwrap() []error }:
+			dumpErr(w, i, err, false)
+			fmt.Fprintf(w, "\n%s%s%s", i, t, err)
+			errs := x.Unwrap()
+			for n, e := range errs {
+				tree(w, i+"  ", e, n+1 == len(errs))
 			}
-			fmt.Fprintf(&buf, "\n%s%s%s", i, t, err)
+			err = nil
+		default:
+			fmt.Fprintf(w, "\n%s%s%s", i, t, err)
+			j := i + "│ "
+			if fin {
+				j = i + "  "
+			}
+			dumpErr(w, j, err, false)
 			err = nil
 		}
 		i += "  "
 	}
-	return strings.Trim(buf.String(), "\n")
 }
 
-// func Tree(err error) string {
-// 	root := textree.NewNode(err.Error())
-// 	tree(root, err)
-// 	var buf bytes.Buffer
-// 	opts := textree.NewRenderOptions()
-// 	opts.ChildrenMarginBottom = 0
-// 	opts.ChildrenMarginTop = 0
-// 	root.Render(&buf, opts)
-// 	return strings.Trim(buf.String(), "\n\r")
-// }
-
-// func tree(node *textree.Node, err error) {
-// 	for err != nil {
-// 		switch x := err.(type) {
-// 		case interface{ Unwrap() error }:
-// 			ie := x.Unwrap()
-// 			if ie != nil {
-// 				newnode := textree.NewNode(strings.TrimSuffix(err.Error(), fmt.Sprintf(": %s", ie)))
-// 				node.Append(newnode)
-// 				node = newnode
-// 			}
-// 			err = ie
-// 		case interface{ Unwrap() []error }:
-// 			for _, err = range x.Unwrap() {
-// 				tree(node, err)
-// 			}
-// 			err = nil
-// 		default:
-// 			node.Append(textree.NewNode(err.Error()))
-// 			err = nil
-// 		}
-// 	}
-// }
+func Tree(err error) string {
+	var buf bytes.Buffer
+	tree(&buf, "", err, true)
+	return strings.Trim(buf.String(), "\n")
+}

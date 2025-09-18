@@ -9,14 +9,9 @@ var scopes = map[pb.SCOPE]string{
 	pb.SCOPE_SYSTEMD:       "systemd",
 	pb.SCOPE_ALIAS:         "alias",
 	pb.SCOPE_CONTAINERS:    "containers",
+	pb.SCOPE_LOGS:          "logs",
+	pb.SCOPE_DAEMON:        "daemon",
 }
-
-// func (s pb.SCOPE) String() string {
-// 	if str, ok := scopes[s]; ok {
-// 		return str
-// 	}
-// 	return scopes[UnknownScope]
-// }
 
 var actions = map[pb.ACTION]string{
 	pb.ACTION_UNKNOWN_ACTION: "unknown",
@@ -27,13 +22,6 @@ var actions = map[pb.ACTION]string{
 	pb.ACTION_DELETE:         "delete",
 	pb.ACTION_LIST:           "list",
 }
-
-// func (a Action) String() string {
-// 	if str, ok := actions[a]; ok {
-// 		return str
-// 	}
-// 	return actions[UnknownAction]
-// }
 
 func NewScope(scope string) pb.SCOPE {
 	if s, ok := scopeMap[scope]; ok {

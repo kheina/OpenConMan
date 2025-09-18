@@ -37,13 +37,12 @@ interface PreparedStatus extends UnitStatus {
 	_prepared: Fuzzysort.Prepared,
 }
 
-const host = `${window.location.protocol}//${window.location.hostname}:5050`;
 const search: Ref<string | void> = ref();
 const allUnits: PreparedStatus[] = [];
 const units: Ref<PreparedStatus[] | null> = ref(null);
 
 function CreateAlias(u: UnitStatus) {
-	cetch(`${host}/v1/service/alias`, {
+	cetch("/v1/service/alias", {
 		method: "PUT",
 		body: JSON.stringify({
 			name: u.name,
@@ -61,7 +60,7 @@ function CreateAlias(u: UnitStatus) {
 }
 
 cetch(
-	`${host}/v1/services/all`
+	"/v1/services/all"
 ).then(
 	r => r.json()
 ).then((r:{ items: UnitStatus[] }) => {

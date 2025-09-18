@@ -2,43 +2,38 @@ package test
 
 import (
 	"fmt"
-	"slices"
-	"time"
 
-	"github.com/coreos/go-systemd/v22/sdjournal"
 	"github.com/kheina/openconman/src/cli"
+	"github.com/kheina/openconman/src/errors"
 )
 
 type Command struct {
 	cli.UnimplementedCommand
 }
 
+type multierr struct {
+	msg  string
+	errs []error
+}
+
+func (e *multierr) Error() string {
+	return e.msg
+}
+
+func (e *multierr) Unwrap() []error {
+	return e.errs
+}
+
 func (c *Command) Run() error {
-	j, err := sdjournal.NewJournal()
-	if err != nil {
-		return err
-	}
-	defer j.Close()
-	j.AddMatch((&sdjournal.Match{Field: sdjournal.SD_JOURNAL_FIELD_SYSTEMD_UNIT, Value: "ocm-copyparty.service"}).String())
-	if err = j.SeekTail(); err != nil {
-		return err
+	err := &multierr{
+		msg: "test3",
+		errs: []error{
+			errors.New(123, "op1", "test1"),
+			errors.New(123, "op2", "test2"),
+		},
 	}
 
-	entries := []*sdjournal.JournalEntry{}
-
-	for range 100 {
-		if n, err := j.Previous(); err != nil || n == 0 {
-			break
-		}
-		entry, err := j.GetEntry()
-		if err != nil {
-			break
-		}
-		entries = append(entries, entry)
-	}
-	for _, e := range slices.Backward(entries) {
-		fmt.Println(time.Unix(0, int64(e.RealtimeTimestamp)*int64(time.Microsecond)), e.Fields["MESSAGE"])
-	}
+	fmt.Println(errors.Tree(errors.Wrap("op4", err, "test4")))
 
 	return nil
 }

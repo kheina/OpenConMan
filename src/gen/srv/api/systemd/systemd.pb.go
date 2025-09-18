@@ -586,7 +586,8 @@ func (x *LogEntry) GetFields() map[string]string {
 
 type GetServiceLogsResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Logs          []*LogEntry            `protobuf:"bytes,10,rep,name=logs,proto3" json:"logs,omitempty"`
+	Name          string                 `protobuf:"bytes,10,opt,name=name,proto3" json:"name,omitempty"`
+	Logs          []*LogEntry            `protobuf:"bytes,20,rep,name=logs,proto3" json:"logs,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -619,6 +620,13 @@ func (x *GetServiceLogsResponse) ProtoReflect() protoreflect.Message {
 // Deprecated: Use GetServiceLogsResponse.ProtoReflect.Descriptor instead.
 func (*GetServiceLogsResponse) Descriptor() ([]byte, []int) {
 	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *GetServiceLogsResponse) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
 }
 
 func (x *GetServiceLogsResponse) GetLogs() []*LogEntry {
@@ -674,10 +682,11 @@ const file_services_srv_api_systemd_proto_rawDesc = "" +
 	"\x06fields\x18\x1e \x03(\v2+.server.api.systemd.v1.LogEntry.FieldsEntryR\x06fields\x1a9\n" +
 	"\vFieldsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"M\n" +
-	"\x16GetServiceLogsResponse\x123\n" +
-	"\x04logs\x18\n" +
-	" \x03(\v2\x1f.server.api.systemd.v1.LogEntryR\x04logs2\xbf\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"a\n" +
+	"\x16GetServiceLogsResponse\x12\x12\n" +
+	"\x04name\x18\n" +
+	" \x01(\tR\x04name\x123\n" +
+	"\x04logs\x18\x14 \x03(\v2\x1f.server.api.systemd.v1.LogEntryR\x04logs2\xbf\n" +
 	"\n" +
 	"\aSystemd\x12\x89\x01\n" +
 	"\fListServices\x120.server.api.systemd.v1.GetServiceStatusesRequest\x1a1.server.api.systemd.v1.GetServiceStatusesResponse\"\x14\x82\xd3\xe4\x93\x02\x0e\x12\f/v1/services\x12\x90\x01\n" +

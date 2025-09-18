@@ -34,8 +34,8 @@ const (
 	SCOPE_SYSTEMD    SCOPE = 3
 	SCOPE_ALIAS      SCOPE = 4
 	SCOPE_CONTAINERS SCOPE = 5
-	SCOPE_DAEMON     SCOPE = 6
-	SCOPE_LOGS       SCOPE = 7
+	SCOPE_LOGS       SCOPE = 6
+	SCOPE_DAEMON     SCOPE = 7
 )
 
 // Enum value maps for SCOPE.
@@ -47,8 +47,8 @@ var (
 		3: "SYSTEMD",
 		4: "ALIAS",
 		5: "CONTAINERS",
-		6: "DAEMON",
-		7: "LOGS",
+		6: "LOGS",
+		7: "DAEMON",
 	}
 	SCOPE_value = map[string]int32{
 		"UNKNOWN_SCOPE": 0,
@@ -57,8 +57,8 @@ var (
 		"SYSTEMD":       3,
 		"ALIAS":         4,
 		"CONTAINERS":    5,
-		"DAEMON":        6,
-		"LOGS":          7,
+		"LOGS":          6,
+		"DAEMON":        7,
 	}
 )
 
@@ -164,10 +164,10 @@ const file_services_pbs_auth_auth_proto_rawDesc = "" +
 	"\aSYSTEMD\x10\x03\x12\t\n" +
 	"\x05ALIAS\x10\x04\x12\x0e\n" +
 	"\n" +
-	"CONTAINERS\x10\x05\x12\n" +
+	"CONTAINERS\x10\x05\x12\b\n" +
+	"\x04LOGS\x10\x06\x12\n" +
 	"\n" +
-	"\x06DAEMON\x10\x06\x12\b\n" +
-	"\x04LOGS\x10\a*d\n" +
+	"\x06DAEMON\x10\a*d\n" +
 	"\x06ACTION\x12\x12\n" +
 	"\x0eUNKNOWN_ACTION\x10\x00\x12\x0e\n" +
 	"\n" +

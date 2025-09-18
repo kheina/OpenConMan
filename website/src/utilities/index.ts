@@ -1,4 +1,5 @@
-import { useRouter, type Router } from 'vue-router';
+import type { Router } from 'vue-router';
+import { auth } from '@/globals';
 
 import drip1 from '$/sounds/drip1.wav';
 import drip2 from '$/sounds/drip2.wav';
@@ -54,7 +55,6 @@ interface CetchOptions {
 	headers?: { [header: string]: string; },
 	body?: string | any,
 	trace?: string,
-	router?: Router,
 }
 
 /**
@@ -75,10 +75,15 @@ export async function cetch(url: string, options: CetchOptions = {}): Promise<Re
 	const handlers = options?.handlers || {};
 	options.headers = options?.headers || {};
 
-	const auth = GetCookie("ocm-auth");
-	if (auth) {
+	const a = GetCookie("ocm-auth");
+	if (a) {
 		options.credentials = "include";
-		options.headers.authorization = "bearer " + auth;
+		options.headers.authorization = "bearer " + a;
+	}
+
+	if (url.startsWith("/")) {
+		const host = `${window.location.protocol}//${window.location.hostname}:5050`;
+		url = host + url;
 	}
 
 	let response: Response;
@@ -98,8 +103,8 @@ export async function cetch(url: string, options: CetchOptions = {}): Promise<Re
 	}
 	else if (response.status === 401) {
 		// unset the auth cookie since it's no longer valid
+		auth.value = undefined;
 		document.cookie = `ocm-auth=nil; expires=${new Date(0)}; samesite=strict; path=/; secure`;
-		options.router?.push("/user/login");
 		throw response;
 	}
 	else if (response.status < 500) {
