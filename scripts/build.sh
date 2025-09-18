@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# this shit needs to fail when any part of the build fails so we stop making
+# random empty releases
+set -e
+
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
 DIR="$( cd -P "$( dirname "$SOURCE" )/.." && pwd )"

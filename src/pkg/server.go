@@ -70,7 +70,7 @@ func (s *Server) GetDaemonUpdate(ctx context.Context, req *srv.GetDaemonUpdateRe
 			break
 		}
 	} else {
-		r, err := http.Get(relAllUrl)
+		r, err := http.Get(relLatestUrl)
 		if err != nil {
 			return nil, errors.Wrap(op, err, "failed to retrieve latest release")
 		}

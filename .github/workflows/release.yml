@@ -42,7 +42,7 @@ jobs:
         run: |
           chmod +x ./scripts/deps.sh
           make deps
-          sudo apt install -y libsystemd-dev libbtrfs-dev
+          sudo apt install -y libsystemd-dev libbtrfs-dev libgpgme-dev
       - name: Build
         id: build
         run: |
