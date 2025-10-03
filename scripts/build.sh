@@ -30,6 +30,8 @@ fi
 
 echo "==> Building OpenConMan for ${GOOS}/${GOARCH}..."
 
+# `-extldflags -static` within -ldflags can be used to force only static linking, but that doesn't work with some of the libs being used
+
 go build \
 -o bin/conman \
 -ldflags "

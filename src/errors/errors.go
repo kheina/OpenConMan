@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"reflect"
 	"strings"
+	"unicode"
 
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-hclog"
@@ -137,37 +138,45 @@ func dumpErr(w io.Writer, i string, err any, fin bool) {
 	for {
 		switch v.Kind() {
 		case reflect.Struct:
+			mk := 0
 			m := v.NumField()
 			errvs := []errv{}
 			structs := []errv{}
-			mk := 0
 		fields:
 			for n := range m {
-				f := v.Field(n)
 				k := v.Type().Field(n).Name
-				switch f.Kind() {
-				case reflect.Interface:
-					fallthrough
-				case reflect.Pointer:
-					fallthrough
-				case reflect.Struct:
-					if !f.CanInterface() {
+				if len(k) > 0 && !unicode.IsUpper(rune(k[0])) {
+					// only print exported values
+					continue
+				}
+				f := v.Field(n)
+				switch {
+				case f.CanInterface():
+					switch f.Kind() {
+					case reflect.Interface:
+						fallthrough
+					case reflect.Pointer:
+						fallthrough
+					case reflect.Struct:
+						structs = append(structs, errv{
+							key:   k,
+							value: f.Interface(),
+						})
+						continue fields
+					case reflect.Map:
 						continue fields
 					}
-					structs = append(structs, errv{
+					errvs = append(errvs, errv{
 						key:   k,
 						value: f.Interface(),
 					})
-					break fields
-				}
-				if !f.CanInterface() {
-					break
+				default:
+					errvs = append(errvs, errv{
+						key:   k,
+						value: fmt.Sprintf("%v", f),
+					})
 				}
 				mk = max(mk, len(k))
-				errvs = append(errvs, errv{
-					key:   k,
-					value: f.Interface(),
-				})
 			}
 			for n, s := range structs {
 				fmt.Fprintf(w, "\n%s%s%v:", i, "├ ", s.key)
@@ -175,8 +184,8 @@ func dumpErr(w io.Writer, i string, err any, fin bool) {
 			}
 			for n, value := range errvs {
 				j := i + "├ "
-				if n+1 == len(errvs) {
-					if fin && len(i) >= 4 {
+				if fin && n+1 == len(errvs) {
+					if len(i) >= 4 {
 						i = i[:len(i)-4] + "└ "
 					}
 					j = i + "└ "
@@ -204,6 +213,11 @@ func tree(w io.Writer, i string, err error, fin bool) {
 			t = "└ "
 		}
 
+		j := i + "│ "
+		if fin {
+			j = i + "  "
+		}
+
 		switch x := err.(type) {
 		case interface{ Unwrap() error }:
 			e := x.Unwrap()
@@ -219,15 +233,11 @@ func tree(w io.Writer, i string, err error, fin bool) {
 			fmt.Fprintf(w, "\n%s%s%s", i, t, err)
 			errs := x.Unwrap()
 			for n, e := range errs {
-				tree(w, i+"  ", e, n+1 == len(errs))
+				tree(w, j, e, n+1 == len(errs))
 			}
 			err = nil
 		default:
 			fmt.Fprintf(w, "\n%s%s%s", i, t, err)
-			j := i + "│ "
-			if fin {
-				j = i + "  "
-			}
 			dumpErr(w, j, err, false)
 			err = nil
 		}

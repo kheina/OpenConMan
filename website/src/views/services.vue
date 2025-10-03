@@ -35,37 +35,39 @@
 					</button>
 				</div>
 			</div>
-			<div class='editor' v-if='newUnitContent'>
-				<div>
+			<div class='window'>
+				<div class='editor' v-if='newUnitContent'>
 					<div>
-						<span>{{ (!newUnitName || newUnitName.endsWith(".service")) ? newUnitName : newUnitName + ".service" }}</span>
-						<i class='material-icons-round' @click='() => newUnitName = newUnitContent = undefined'>close</i>
-					</div>
-					<CodeEditor class='code-editor' v-model:value='newUnitContent'/>
-					<div>
-						<p>add <code>ocm-</code> to the start of the unit name for dashboard tracking</p>
 						<div>
-							<input v-model='newUnitName' placeholder='new-unit.service'/>
-							<button @click='CreateService'>
-								create unit
-							</button>
+							<span>{{ (!newUnitName || newUnitName.endsWith(".service")) ? newUnitName : newUnitName + ".service" }}</span>
+							<i class='material-icons-round' @click='() => newUnitName = newUnitContent = undefined'>close</i>
+						</div>
+						<CodeEditor class='code-editor' v-model:value='newUnitContent'/>
+						<div>
+							<p>add <code>ocm-</code> to the start of the unit name for dashboard tracking</p>
+							<div>
+								<input v-model='newUnitName' placeholder='new-unit.service'/>
+								<button @click='CreateService'>
+									create unit
+								</button>
+							</div>
 						</div>
 					</div>
 				</div>
-			</div>
-			<div class='logs' v-else-if='logs'>
-				<div>
+				<div class='logs' v-else-if='logs'>
 					<div>
-						<span>logs: {{ logs.name }}</span>
-						<i class='material-icons-round' @click='() => logs = undefined'>close</i>
-					</div>
-					<div v-if='logs.logs'>
-						<code v-for='l in logs.logs'>{{ l.fields["message"] }}</code>
-						<button  @click='() => GetServiceLogs(logs ?? { name: "" })' v-show='logs.logs.length % 100 === 0'>load more</button>
-					</div>
-					<div v-else>
 						<div>
-							none
+							<span>logs: {{ logs.name }}</span>
+							<i class='material-icons-round' @click='() => logs = undefined'>close</i>
+						</div>
+						<div v-if='logs.logs'>
+							<code v-for='l in logs.logs'>{{ LogMessage(l.fields) }}</code>
+							<button  @click='() => GetServiceLogs(logs ?? { name: "" })' v-show='logs.logs.length % 100 === 0'>load more</button>
+						</div>
+						<div v-else>
+							<div>
+								none
+							</div>
 						</div>
 					</div>
 				</div>
@@ -190,6 +192,17 @@ function Updater(): number {
 
 function UnitState(u: UnitStatus): string {
 	return u.sub_state || u.active_state || u.load_state;
+}
+
+function LogMessage(fields: { [k: string]: string }): string {
+	const message = fields["message"];
+
+	// this is a bit of a weird case, the logs we receive are RAW, so we basically
+	// want to delete any message data after the final carriage return, as it
+	// appear in journalctl
+	const cr = message.lastIndexOf("\r");
+	if (cr > 0 && message.length > cr + 1) return message.substring(cr + 1);
+	return message;
 }
 </script>
 <style scoped>
@@ -334,6 +347,18 @@ input:focus {
 	color: var(--text);
 	&::placeholder {
 		color: #eeeeee20;
+	}
+}
+
+.window {
+	position: fixed;
+	top: 0;
+	right: 0;
+	width: calc(100vw - 15em - var(--border-size));
+	height: 100vh;
+
+	&:not(:has(*)) {
+		display: none;
 	}
 }
 

@@ -50,7 +50,7 @@ func (c *loginCommand) Run() error {
 	if err != nil {
 		return fmt.Errorf("%s: login failed: %w", op, err)
 	}
-	tok, err := auth.NewAuthToken(user, time.Now().Add(time.Hour*24*365)) // 1 year ig
+	tok, err := auth.NewAuthToken(user, time.Now().Add(time.Hour*24)) // 1 day
 	if err != nil {
 		return fmt.Errorf("%s: failed to create token: %w", op, err)
 	}

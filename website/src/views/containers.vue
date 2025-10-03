@@ -6,7 +6,7 @@
 				<h2>{{ Name(c) }}</h2>
 			</div>
 			<p>{{ c.image }}</p>
-			<p>{{ c.state == "running" ? c.status.toLocaleLowerCase() : c.state }}</p>
+			<p>{{ c.state == "running" ? c.status?.toLocaleLowerCase() ?? c.state : c.state }}</p>
 		</div>
 		<div class='loading' v-else>
 			loading

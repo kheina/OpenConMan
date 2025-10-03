@@ -1,7 +1,7 @@
 <template>
 	<div :id='container.id' :class='"container-status " + container.state'>
 		<h5>{{ container.names[0].replace(/^\/*/, "") }}</h5>
-		<p>{{ container.state == "running" ? container.status.toLocaleLowerCase() : container.state }}</p>
+		<p>{{ container.state == "running" ? container.status?.toLocaleLowerCase() ?? container.state : container.state }}</p>
 	</div>
 </template>
 <script setup lang='ts'>

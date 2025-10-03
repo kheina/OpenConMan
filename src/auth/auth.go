@@ -90,12 +90,6 @@ func (m *tokenMap) GetUser(id string) *config.UserConfig {
 	// in the future I would love to be able to listen for filesystem changes to
 	// automatically do this, but I don't think it's worthwhile do it on every
 	// request
-	// go func() {
-	// 	// refresh the user and permissions so that the next request is fresh
-	// 	if c, err := config.Read(id); err == nil {
-	// 		*conf = *c
-	// 	}
-	// }()
 
 	return conf
 }
@@ -116,7 +110,7 @@ func (m *tokenMap) setUser(t *user.UserToken, c *config.UserConfig) {
 	}
 }
 
-// NewAuthToken generates a new auth token that has been signed, encoded and is
+// NewAuthToken generates a new auth token that has been signed, encoded, and is
 // ready to be inserted directly into a request header.
 func NewAuthToken(u *config.UserConfig, expires time.Time) ([]byte, error) {
 	const op = "auth.NewAuthToken"

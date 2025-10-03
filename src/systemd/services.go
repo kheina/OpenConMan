@@ -130,7 +130,6 @@ func (s *Server) ListServices(ctx context.Context, req *srv.GetServiceStatusesRe
 		}
 	}
 	for _, u := range units {
-		alias, _ := amap[u.Name]
 		if _, ok := names[u.Name]; ok {
 			*(names[u.Name]) = pb.UnitStatus{
 				Name:        u.Name,
@@ -143,7 +142,7 @@ func (s *Server) ListServices(ctx context.Context, req *srv.GetServiceStatusesRe
 				JobId:       u.JobId,
 				JobType:     u.JobType,
 				JobPath:     string(u.JobPath),
-				Alias:       util.OptionalString(alias),
+				Alias:       util.OptionalString(amap[u.Name]),
 			}
 		} else {
 			items = append(items, &pb.UnitStatus{
@@ -157,7 +156,7 @@ func (s *Server) ListServices(ctx context.Context, req *srv.GetServiceStatusesRe
 				JobId:       u.JobId,
 				JobType:     u.JobType,
 				JobPath:     string(u.JobPath),
-				Alias:       util.OptionalString(alias),
+				Alias:       util.OptionalString(amap[u.Name]),
 			})
 		}
 	}

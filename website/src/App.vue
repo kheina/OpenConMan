@@ -56,7 +56,7 @@
 	</div>
 </template>
 <script setup lang='ts'>
-import { RouterLink, RouterView, useRouter } from 'vue-router';
+import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router';
 import { ref, watch, type Ref } from 'vue';
 import { auth } from '@/globals';
 import { cetch, GetCookie } from '@/utilities';
@@ -70,6 +70,7 @@ interface Update {
 }
 
 const router = useRouter();
+const route = useRoute();
 const update: Ref<undefined | Update> = ref();
 
 auth.value = GetCookie("ocm-auth");
@@ -89,10 +90,10 @@ function checkForUpdate() {
 
 watch(auth, (auth: string | undefined) => {
 	if (auth) {
-		router.replace("/");
+		router.replace(route.query?.path?.toString() ?? "/");
 		checkForUpdate();
 	} else {
-		router.replace("/user/login");
+		router.replace("/user/login?path=" + encodeURIComponent(route.fullPath));
 	}
 });
 </script>

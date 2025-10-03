@@ -38,7 +38,7 @@ func (s *Server) Login(ctx context.Context, req *srv.PostLoginRequest) (*srv.Pos
 	if err != nil {
 		return nil, errors.Wrap(op, err, "login failed")
 	}
-	exp := time.Now().Add(time.Hour * 24 * 365) // 1 year ig
+	exp := time.Now().Add(time.Hour * 24) // 1 day
 	tok, err := NewAuthToken(user, exp)
 	if err != nil {
 		return nil, errors.Wrap(op, err, "failed to create auth token")

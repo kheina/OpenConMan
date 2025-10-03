@@ -3,5 +3,5 @@ export interface Container {
 	image: string,
 	names: string[],
 	state: "created" | "running" | "paused" | "restarting" | "exited" | "removing" | "dead",
-	status: string,
+	status?: string,
 }
