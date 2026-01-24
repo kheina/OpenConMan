@@ -2,12 +2,15 @@ package systemd
 
 import (
 	"context"
+	stderr "errors"
 	"fmt"
 	"os"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/coreos/go-systemd/v22/sdjournal"
+	"google.golang.org/grpc"
 
 	"github.com/kheina/openconman/src/auth"
 	"github.com/kheina/openconman/src/errors"
@@ -15,6 +18,55 @@ import (
 	srv "github.com/kheina/openconman/src/gen/srv/api/systemd"
 	"github.com/kheina/openconman/src/util"
 )
+
+func (s *Server) GetService(req *srv.GetServiceRequest, stream grpc.ServerStreamingServer[srv.GetServiceResponse]) error {
+	const op = "systemd.(Server).GetService"
+	ctx := stream.Context()
+	if err := auth.Authorize(ctx, auth.Read, auth.Systemd); err != nil {
+		return errors.Wrap(op, err, "failed to authorize request")
+	}
+
+	switch {
+	case req.Name == "":
+		return errors.New(errors.BadRequest, op, "missing required field: name")
+	}
+
+	for {
+		units, err := s.dbus.ListUnitsByNamesContext(ctx, []string{req.Name})
+		switch {
+		case err != nil:
+			if stderr.Is(err, context.Canceled) {
+				return nil
+			}
+			return errors.Wrap(op, err, "failed to list units")
+		case len(units) != 1:
+			return errors.New(errors.Internal, op, fmt.Sprintf("incorrect number of units found. expected 1, found %d", len(units)))
+		}
+
+		stream.Send(&srv.GetServiceResponse{
+			Item: &pb.UnitStatus{
+				Name:        units[0].Name,
+				Description: units[0].Description,
+				LoadState:   units[0].LoadState,
+				ActiveState: units[0].ActiveState,
+				SubState:    units[0].SubState,
+				Followed:    units[0].Followed,
+				Path:        string(units[0].Path),
+				JobId:       units[0].JobId,
+				JobType:     units[0].JobType,
+				JobPath:     string(units[0].JobPath),
+			},
+		})
+
+		switch {
+		case !req.Live:
+			return nil
+		case ctx.Err() != nil:
+			return nil
+		}
+		time.Sleep(1 * time.Second)
+	}
+}
 
 func (s *Server) ListAllServices(ctx context.Context, req *srv.GetServiceStatusesRequest) (*srv.GetServiceStatusesResponse, error) {
 	const op = "systemd.(Server).ListServices"
@@ -168,7 +220,7 @@ func (s *Server) ListServices(ctx context.Context, req *srv.GetServiceStatusesRe
 	}, nil
 }
 
-func (s *Server) EnableService(ctx context.Context, req *srv.GetEnableServiceRequest) (*srv.GetEnableServiceResponse, error) {
+func (s *Server) EnableService(ctx context.Context, req *srv.GetEnableServiceRequest) (*srv.GetServiceResponse, error) {
 	const op = "systemd.(Server).EnableService"
 	if err := auth.Authorize(ctx, auth.Update, auth.Systemd); err != nil {
 		return nil, errors.Wrap(op, err, "failed to authorize request")
@@ -198,7 +250,7 @@ func (s *Server) EnableService(ctx context.Context, req *srv.GetEnableServiceReq
 		return nil, errors.New(errors.Internal, op, fmt.Sprintf("failed to fetch unit: %s", req.Name))
 	}
 
-	return &srv.GetEnableServiceResponse{
+	return &srv.GetServiceResponse{
 		Item: &pb.UnitStatus{
 			Name:        units[0].Name,
 			Description: units[0].Description,
@@ -214,7 +266,7 @@ func (s *Server) EnableService(ctx context.Context, req *srv.GetEnableServiceReq
 	}, nil
 }
 
-func (s *Server) DisableService(ctx context.Context, req *srv.GetEnableServiceRequest) (*srv.GetEnableServiceResponse, error) {
+func (s *Server) DisableService(ctx context.Context, req *srv.GetEnableServiceRequest) (*srv.GetServiceResponse, error) {
 	const op = "systemd.(Server).DisableService"
 	if err := auth.Authorize(ctx, auth.Update, auth.Systemd); err != nil {
 		return nil, errors.Wrap(op, err, "failed to authorize request")
@@ -244,7 +296,7 @@ func (s *Server) DisableService(ctx context.Context, req *srv.GetEnableServiceRe
 		return nil, errors.New(errors.Internal, op, fmt.Sprintf("failed to fetch unit: %s", req.Name))
 	}
 
-	return &srv.GetEnableServiceResponse{
+	return &srv.GetServiceResponse{
 		Item: &pb.UnitStatus{
 			Name:        units[0].Name,
 			Description: units[0].Description,
@@ -353,22 +405,23 @@ func (s *Server) DeleteService(ctx context.Context, req *srv.DeleteServiceReques
 	return nil, nil
 }
 
-func (s *Server) GetServiceLogs(ctx context.Context, req *srv.GetServiceLogsRequest) (*srv.GetServiceLogsResponse, error) {
+func (s *Server) GetServiceLogs(req *srv.GetServiceLogsRequest, stream grpc.ServerStreamingServer[srv.GetServiceLogsResponse]) error {
 	const op = "systemd.(Server).GetServiceLogs"
+	ctx := stream.Context()
 	// the max number of lines able to be returned by the endpoint
 	const maxlines = 1000
 	if err := auth.Authorize(ctx, auth.Read, auth.Systemd, auth.Logs); err != nil {
-		return nil, errors.Wrap(op, err, "failed to authorize request")
+		return errors.Wrap(op, err, "failed to authorize request")
 	}
 
 	switch {
 	case req.Name == "":
-		return nil, errors.New(errors.BadRequest, op, "missing required field: name")
+		return errors.New(errors.BadRequest, op, "missing required field: name")
 	}
 
 	j, err := sdjournal.NewJournal()
 	if err != nil {
-		return nil, errors.Wrap(op, err, "failed to create journal")
+		return errors.Wrap(op, err, "failed to create journal")
 	}
 
 	defer j.Close()
@@ -379,10 +432,12 @@ func (s *Server) GetServiceLogs(ctx context.Context, req *srv.GetServiceLogsRequ
 
 	if req.Seek != nil {
 		if err = j.SeekCursor(*req.Seek); err != nil {
-			return nil, errors.Wrap(op, err, fmt.Sprintf("failed to seek to \"%s\" within journal", *req.Seek))
+			return errors.Wrap(op, err, fmt.Sprintf("failed to seek to \"%s\" within journal", *req.Seek))
 		}
+		l := false
+		req.Live = &l
 	} else if err = j.SeekTail(); err != nil {
-		return nil, errors.Wrap(op, err, "failed to seek to tail within journal")
+		return errors.Wrap(op, err, "failed to seek to tail within journal")
 	}
 
 	res := &srv.GetServiceLogsResponse{
@@ -393,18 +448,10 @@ func (s *Server) GetServiceLogs(ctx context.Context, req *srv.GetServiceLogsRequ
 		lines = min(*req.Lines, maxlines)
 	}
 
-lines:
-	for range lines {
-		n, err := j.Previous()
-		switch {
-		case err != nil:
-			return nil, errors.Wrap(op, err, "failed to iterate within journal")
-		case n == 0:
-			break lines
-		}
+	readEntry := func() error {
 		entry, err := j.GetEntry()
 		if err != nil {
-			return nil, errors.Wrap(op, err, "failed to retrieve journal entry")
+			return errors.Wrap(op, err, "failed to retrieve journal entry")
 		}
 		log := &srv.LogEntry{
 			Timestamp: entry.RealtimeTimestamp,
@@ -415,6 +462,78 @@ lines:
 			log.Fields[strings.ToLower(k)] = v
 		}
 		res.Logs = append(res.Logs, log)
+		return nil
 	}
-	return res, nil
+
+journal:
+	for range lines {
+		n, err := j.Previous()
+		switch {
+		case err != nil:
+			return errors.Wrap(op, err, "failed to iterate within journal")
+		case n == 0:
+			break journal
+		}
+		if err := readEntry(); err != nil {
+			return err
+		}
+	}
+	stream.Send(res)
+	if !req.GetLive() {
+		return nil
+	}
+
+	jch := make(chan int)
+	go func() {
+		for {
+			jch <- j.Wait(time.Millisecond * 100)
+			if ctx.Err() != nil {
+				return
+			}
+		}
+	}()
+	latest := ""
+	for {
+		select {
+		case <-ctx.Done():
+			<-jch // make sure that the gofunc exits before returning otherwise it'll crash
+			return nil
+		case r := <-jch:
+			switch r {
+			case sdjournal.SD_JOURNAL_NOP:
+			case sdjournal.SD_JOURNAL_INVALIDATE:
+			case sdjournal.SD_JOURNAL_APPEND:
+				if len(res.Logs) > 0 {
+					latest = res.Logs[0].Cursor
+					res.Logs = make([]*srv.LogEntry, 0)
+				}
+				if err = j.SeekTail(); err != nil {
+					return errors.Wrap(op, err, "failed to seek to tail within journal")
+				}
+			j2:
+				for range 10 {
+					n, err := j.Previous()
+					switch {
+					case err != nil:
+						return errors.Wrap(op, err, "failed to iterate within journal")
+					case n == 0:
+						break j2
+					}
+					if cur, err := j.GetCursor(); err != nil {
+						return errors.Wrap(op, err, "failed to get journal cursor")
+					} else if cur == latest {
+						break j2
+					}
+					if err := readEntry(); err != nil {
+						return err
+					}
+				}
+				if len(res.Logs) > 0 {
+					stream.Send(res)
+				}
+			default:
+				return errors.New(500, op, "unexpected journal code received")
+			}
+		}
+	}
 }

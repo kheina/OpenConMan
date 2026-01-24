@@ -73,6 +73,7 @@ func Handler(ctx context.Context, gs *grpc.Server, grpcAddr string, logger hclog
 			}
 		}),
 		runtime.WithErrorHandler(errors.ApiErrorHandler(logger)),
+		// runtime.WithStreamErrorHandler(),
 	)
 
 	// register all of the different grpc servers

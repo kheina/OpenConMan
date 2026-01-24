@@ -25,17 +25,13 @@ export function Notify() {
 	}
 }
 
-export function GetCookie(cookieName: string, default_value: any = null, type: string | null = null) {
+export function GetCookie(cookieName: string, default_value: any = null) {
 	const name = cookieName + "=";
-	let ca = document.cookie.split(";");
+	const ca = document.cookie.split(";");
 	let value: any = default_value;
 	for (let i = 0; i < ca.length; i++) {
-		let c = ca[i];
-		while (c.charAt(0) == " ") {
-			c = c.substring(1);
-		}
-
-		if (c.indexOf(name) == 0) {
+		const c = ca[i].trimStart();
+		if (c.startsWith(name)) {
 			value = decodeURIComponent(c.substring(name.length, c.length));
 			break;
 		}
@@ -55,6 +51,7 @@ interface CetchOptions {
 	headers?: { [header: string]: string; },
 	body?: string | any,
 	trace?: string,
+	signal?: AbortSignal,
 }
 
 /**
@@ -67,7 +64,8 @@ interface CetchOptions {
  * 	credentials?: "include",
  * 	headers?:     { [header: string]: string; },
  * 	body?:        string | any,
- *  trace?:       string,
+ * 	trace?:       string,
+ * 	signal?:      AbortSignal,
  * }
  * @returns 
  */
@@ -82,8 +80,7 @@ export async function cetch(url: string, options: CetchOptions = {}): Promise<Re
 	}
 
 	if (url.startsWith("/")) {
-		const host = `${window.location.protocol}//${window.location.hostname}:5050`;
-		url = host + url;
+		url = window.location.origin + url;
 	}
 
 	let response: Response;

@@ -57,23 +57,28 @@ service Systemd {
     };
   }
 
-  rpc EnableService(GetEnableServiceRequest)
-      returns (GetEnableServiceResponse) {
+  rpc EnableService(GetEnableServiceRequest) returns (GetServiceResponse) {
     option (google.api.http) = {
       get: "/v1/service/enable/{name}"
     };
   }
 
-  rpc DisableService(GetEnableServiceRequest)
-      returns (GetEnableServiceResponse) {
+  rpc DisableService(GetEnableServiceRequest) returns (GetServiceResponse) {
     option (google.api.http) = {
       get: "/v1/service/disable/{name}"
     };
   }
 
-  rpc GetServiceLogs(GetServiceLogsRequest) returns (GetServiceLogsResponse) {
+  rpc GetServiceLogs(GetServiceLogsRequest)
+      returns (stream GetServiceLogsResponse) {
     option (google.api.http) = {
       get: "/v1/service/logs/{name}"
+    };
+  }
+
+  rpc GetService(GetServiceRequest) returns (stream GetServiceResponse) {
+    option (google.api.http) = {
+      get: "/v1/service/{name}"
     };
   }
 }
@@ -89,7 +94,15 @@ message GetEnableServiceRequest {
   string name = 10;
 }
 
-message GetEnableServiceResponse {
+message GetServiceRequest {
+  // The primary unit name as string
+  string name = 10;
+  // Should the connection stay open and send updates on the status of the
+  // service over the same connection
+  bool live = 20;
+}
+
+message GetServiceResponse {
   server.api.pbs.v1.systemd.UnitStatus item = 10;
 }
 
@@ -127,6 +140,9 @@ message GetServiceLogsRequest {
   optional uint32 lines = 20;
   // Seeks to a concrete journal cursor before iterating and returning messages
   optional string seek = 30;
+  // Should the connection stay open and send updates on the status of the
+  // service over the same connection. Defaults to false, seek must be nil.
+  optional bool live = 40;
 }
 
 message LogEntry {

@@ -28,6 +28,7 @@ const (
 	Systemd_EnableService_FullMethodName      = "/server.api.systemd.v1.Systemd/EnableService"
 	Systemd_DisableService_FullMethodName     = "/server.api.systemd.v1.Systemd/DisableService"
 	Systemd_GetServiceLogs_FullMethodName     = "/server.api.systemd.v1.Systemd/GetServiceLogs"
+	Systemd_GetService_FullMethodName         = "/server.api.systemd.v1.Systemd/GetService"
 )
 
 // SystemdClient is the client API for Systemd service.
@@ -40,9 +41,10 @@ type SystemdClient interface {
 	DeleteServiceAlias(ctx context.Context, in *DeleteServiceRequest, opts ...grpc.CallOption) (*DeleteServiceResponse, error)
 	PutService(ctx context.Context, in *PutServiceRequest, opts ...grpc.CallOption) (*PutServiceResponse, error)
 	DeleteService(ctx context.Context, in *DeleteServiceRequest, opts ...grpc.CallOption) (*DeleteServiceResponse, error)
-	EnableService(ctx context.Context, in *GetEnableServiceRequest, opts ...grpc.CallOption) (*GetEnableServiceResponse, error)
-	DisableService(ctx context.Context, in *GetEnableServiceRequest, opts ...grpc.CallOption) (*GetEnableServiceResponse, error)
-	GetServiceLogs(ctx context.Context, in *GetServiceLogsRequest, opts ...grpc.CallOption) (*GetServiceLogsResponse, error)
+	EnableService(ctx context.Context, in *GetEnableServiceRequest, opts ...grpc.CallOption) (*GetServiceResponse, error)
+	DisableService(ctx context.Context, in *GetEnableServiceRequest, opts ...grpc.CallOption) (*GetServiceResponse, error)
+	GetServiceLogs(ctx context.Context, in *GetServiceLogsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[GetServiceLogsResponse], error)
+	GetService(ctx context.Context, in *GetServiceRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[GetServiceResponse], error)
 }
 
 type systemdClient struct {
@@ -113,9 +115,9 @@ func (c *systemdClient) DeleteService(ctx context.Context, in *DeleteServiceRequ
 	return out, nil
 }
 
-func (c *systemdClient) EnableService(ctx context.Context, in *GetEnableServiceRequest, opts ...grpc.CallOption) (*GetEnableServiceResponse, error) {
+func (c *systemdClient) EnableService(ctx context.Context, in *GetEnableServiceRequest, opts ...grpc.CallOption) (*GetServiceResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetEnableServiceResponse)
+	out := new(GetServiceResponse)
 	err := c.cc.Invoke(ctx, Systemd_EnableService_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -123,9 +125,9 @@ func (c *systemdClient) EnableService(ctx context.Context, in *GetEnableServiceR
 	return out, nil
 }
 
-func (c *systemdClient) DisableService(ctx context.Context, in *GetEnableServiceRequest, opts ...grpc.CallOption) (*GetEnableServiceResponse, error) {
+func (c *systemdClient) DisableService(ctx context.Context, in *GetEnableServiceRequest, opts ...grpc.CallOption) (*GetServiceResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetEnableServiceResponse)
+	out := new(GetServiceResponse)
 	err := c.cc.Invoke(ctx, Systemd_DisableService_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -133,15 +135,43 @@ func (c *systemdClient) DisableService(ctx context.Context, in *GetEnableService
 	return out, nil
 }
 
-func (c *systemdClient) GetServiceLogs(ctx context.Context, in *GetServiceLogsRequest, opts ...grpc.CallOption) (*GetServiceLogsResponse, error) {
+func (c *systemdClient) GetServiceLogs(ctx context.Context, in *GetServiceLogsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[GetServiceLogsResponse], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetServiceLogsResponse)
-	err := c.cc.Invoke(ctx, Systemd_GetServiceLogs_FullMethodName, in, out, cOpts...)
+	stream, err := c.cc.NewStream(ctx, &Systemd_ServiceDesc.Streams[0], Systemd_GetServiceLogs_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &grpc.GenericClientStream[GetServiceLogsRequest, GetServiceLogsResponse]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
 }
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Systemd_GetServiceLogsClient = grpc.ServerStreamingClient[GetServiceLogsResponse]
+
+func (c *systemdClient) GetService(ctx context.Context, in *GetServiceRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[GetServiceResponse], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &Systemd_ServiceDesc.Streams[1], Systemd_GetService_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[GetServiceRequest, GetServiceResponse]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Systemd_GetServiceClient = grpc.ServerStreamingClient[GetServiceResponse]
 
 // SystemdServer is the server API for Systemd service.
 // All implementations must embed UnimplementedSystemdServer
@@ -153,9 +183,10 @@ type SystemdServer interface {
 	DeleteServiceAlias(context.Context, *DeleteServiceRequest) (*DeleteServiceResponse, error)
 	PutService(context.Context, *PutServiceRequest) (*PutServiceResponse, error)
 	DeleteService(context.Context, *DeleteServiceRequest) (*DeleteServiceResponse, error)
-	EnableService(context.Context, *GetEnableServiceRequest) (*GetEnableServiceResponse, error)
-	DisableService(context.Context, *GetEnableServiceRequest) (*GetEnableServiceResponse, error)
-	GetServiceLogs(context.Context, *GetServiceLogsRequest) (*GetServiceLogsResponse, error)
+	EnableService(context.Context, *GetEnableServiceRequest) (*GetServiceResponse, error)
+	DisableService(context.Context, *GetEnableServiceRequest) (*GetServiceResponse, error)
+	GetServiceLogs(*GetServiceLogsRequest, grpc.ServerStreamingServer[GetServiceLogsResponse]) error
+	GetService(*GetServiceRequest, grpc.ServerStreamingServer[GetServiceResponse]) error
 	mustEmbedUnimplementedSystemdServer()
 }
 
@@ -184,14 +215,17 @@ func (UnimplementedSystemdServer) PutService(context.Context, *PutServiceRequest
 func (UnimplementedSystemdServer) DeleteService(context.Context, *DeleteServiceRequest) (*DeleteServiceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteService not implemented")
 }
-func (UnimplementedSystemdServer) EnableService(context.Context, *GetEnableServiceRequest) (*GetEnableServiceResponse, error) {
+func (UnimplementedSystemdServer) EnableService(context.Context, *GetEnableServiceRequest) (*GetServiceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EnableService not implemented")
 }
-func (UnimplementedSystemdServer) DisableService(context.Context, *GetEnableServiceRequest) (*GetEnableServiceResponse, error) {
+func (UnimplementedSystemdServer) DisableService(context.Context, *GetEnableServiceRequest) (*GetServiceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DisableService not implemented")
 }
-func (UnimplementedSystemdServer) GetServiceLogs(context.Context, *GetServiceLogsRequest) (*GetServiceLogsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetServiceLogs not implemented")
+func (UnimplementedSystemdServer) GetServiceLogs(*GetServiceLogsRequest, grpc.ServerStreamingServer[GetServiceLogsResponse]) error {
+	return status.Errorf(codes.Unimplemented, "method GetServiceLogs not implemented")
+}
+func (UnimplementedSystemdServer) GetService(*GetServiceRequest, grpc.ServerStreamingServer[GetServiceResponse]) error {
+	return status.Errorf(codes.Unimplemented, "method GetService not implemented")
 }
 func (UnimplementedSystemdServer) mustEmbedUnimplementedSystemdServer() {}
 func (UnimplementedSystemdServer) testEmbeddedByValue()                 {}
@@ -358,23 +392,27 @@ func _Systemd_DisableService_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Systemd_GetServiceLogs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetServiceLogsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
+func _Systemd_GetServiceLogs_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GetServiceLogsRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
 	}
-	if interceptor == nil {
-		return srv.(SystemdServer).GetServiceLogs(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Systemd_GetServiceLogs_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SystemdServer).GetServiceLogs(ctx, req.(*GetServiceLogsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
+	return srv.(SystemdServer).GetServiceLogs(m, &grpc.GenericServerStream[GetServiceLogsRequest, GetServiceLogsResponse]{ServerStream: stream})
 }
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Systemd_GetServiceLogsServer = grpc.ServerStreamingServer[GetServiceLogsResponse]
+
+func _Systemd_GetService_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GetServiceRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(SystemdServer).GetService(m, &grpc.GenericServerStream[GetServiceRequest, GetServiceResponse]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Systemd_GetServiceServer = grpc.ServerStreamingServer[GetServiceResponse]
 
 // Systemd_ServiceDesc is the grpc.ServiceDesc for Systemd service.
 // It's only intended for direct use with grpc.RegisterService,
@@ -415,11 +453,18 @@ var Systemd_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "DisableService",
 			Handler:    _Systemd_DisableService_Handler,
 		},
+	},
+	Streams: []grpc.StreamDesc{
 		{
-			MethodName: "GetServiceLogs",
-			Handler:    _Systemd_GetServiceLogs_Handler,
+			StreamName:    "GetServiceLogs",
+			Handler:       _Systemd_GetServiceLogs_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "GetService",
+			Handler:       _Systemd_GetService_Handler,
+			ServerStreams: true,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
 	Metadata: "services/srv/api/systemd.proto",
 }

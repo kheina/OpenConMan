@@ -58,7 +58,7 @@
 					<div>
 						<div>
 							<span>logs: {{ logs.name }}</span>
-							<i class='material-icons-round' @click='() => logs = undefined'>close</i>
+							<i class='material-icons-round' @click='() => { abort(); logs = undefined; }'>close</i>
 						</div>
 						<div v-if='logs.logs'>
 							<code v-for='l in logs.logs'>{{ LogMessage(l.fields) }}</code>
@@ -93,7 +93,13 @@ const newUnitContent: Ref<string | undefined> = ref();
 const newUnitName: Ref<string | undefined> = ref();
 const logs: Ref<UnitLogs | undefined> = ref();
 
+let _abort = new AbortController();
+const abort = () => {
+	_abort.abort();
+	_abort = new AbortController();
+};
 onMounted(() => update.value = Updater());
+onUnmounted(() => _abort.abort());
 onUnmounted(() => update.value = clearTimeout(update.value) ?? undefined);
 
 function StartService(u: UnitStatus) {
@@ -145,17 +151,38 @@ function DeleteService(u: UnitStatus) {
 
 function GetServiceLogs(u: { name: string }) {
 	let url = `/v1/service/logs/${u.name}`
+	let live = false;
 	if (logs.value) url += "?seek=" + encodeURIComponent(logs.value.logs[logs.value.logs.length-1].cursor);
+	else {
+		url += "?live=1";
+		live = true;
+	}
+
+	const abort = _abort;
 	cetch(url, {
-		method: "GET",
-	}).then(
-		r => r.json()
-	).then((r: UnitLogs) => {
-		if (logs.value) logs.value.logs = logs.value.logs.concat(r.logs);
-		else logs.value = r;
+		signal: abort.signal,
+	}).then(res => {
+		if (!res.body) return;
+		const ro = res.body.pipeThrough(
+			new TextDecoderStream("utf-8", { "fatal": false }),
+			{ signal: abort.signal },
+		).getReader();
+
+		const rf = () => {
+			ro.read().then(r => {
+				if (r.done) return;
+				const rj: UnitLogs = JSON.parse(r.value).result;
+				if (logs.value) {
+					if (live) logs.value.logs.unshift(...rj.logs);
+					else logs.value.logs = logs.value.logs.concat(rj.logs);
+				} else logs.value = rj;
+				rf();
+			});
+		};
+		rf();
 	}).catch(
 		console.error
-	);
+	).finally(abort.abort);
 }
 
 function CreateService() {
@@ -195,7 +222,7 @@ function UnitState(u: UnitStatus): string {
 }
 
 function LogMessage(fields: { [k: string]: string }): string {
-	const message = fields["message"];
+	const message = fields.message;
 
 	// this is a bit of a weird case, the logs we receive are RAW, so we basically
 	// want to delete any message data after the final carriage return, as it
