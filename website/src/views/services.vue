@@ -66,7 +66,7 @@
 							<i class='material-icons-round' @click='() => { abort(); logs = undefined; }'>close</i>
 						</div>
 						<div v-if='logs.logs'>
-							<code v-for='l in logs.logs'>{{ LogMessage(l.fields) }}</code>
+							<code v-for='l in logs.logs' v-html='LogMessage(l.fields)'/>
 							<button  @click='() => GetServiceLogs(logs ?? { name: "" })' v-show='showmore'>load more</button>
 						</div>
 						<div v-else>
@@ -221,15 +221,175 @@ function UnitState(u: UnitStatus): string {
 	return u.sub_state || u.active_state || u.load_state;
 }
 
+function colorize(str: string): string {
+	const re = /\u001b\[\d{1,2}(;\d{1,2})*m/g;
+	let fg = "";
+	let bg = "";
+	let st = "";
+	const fore = (f: string): string => {
+		let r = "";
+		if (fg) r += "</span>";
+		fg = f;
+		return r + `<span class="${fg}">`
+	};
+	const back = (b: string): string => {
+		let r = "";
+		if (fg) r += "</span>";
+		if (bg) r += "</span>";
+		bg = b;
+		return r + `<span class="${fg} ${bg}">`
+	};
+	const style = (s: string): string => {
+		let r = "";
+		if (fg) r += "</span>";
+		if (bg) r += "</span>";
+		if (st) r += "</span>";
+		st = s;
+		return r + `<span class="${fg} ${bg} ${st}">`
+	};
+	const reset = (): string => {
+		let r = "";
+		if (fg) {
+			r += "</span>";
+			fg = "";
+		}
+		if (bg) {
+			r += "</span>";
+			bg = "";
+		}
+		if (st) {
+			r += "</span>";
+			st = "";
+		}
+		return r;
+	}
+
+	str = str.replace(re, (_m: string) => {
+		let r = "";
+		// don't ask me why parse.Int doesn't work
+		_m.substring(2, _m.length - 1).split(";").map(parseFloat).map(Math.round).forEach(m => {
+			switch (m) {
+			// STYLE
+			// reset
+			case 0:
+				r += reset();
+			// bold
+			case 1:
+				r += style("bold");
+			// disable
+			case 2:
+				r += style("disable");
+			// underline
+			case 4:
+				r += style("underline");
+			// reverse
+			case 7:
+				r += style("reverse");
+			// strikethrough
+			case 9:
+				r += style("strikethrough");
+			// invisible
+			case 8:
+				r += style("invisible");
+
+			// FG
+			// black
+			case 30:
+				r += fore("black");
+			// red
+			case 31:
+				r += fore("red");
+			// green
+			case 32:
+				r += fore("green");
+			// orange
+			case 33:
+				r += fore("orange");
+			// blue
+			case 34:
+				r += fore("blue");
+			// purple
+			case 35:
+				r += fore("purple");
+			// cyan
+			case 36:
+				r += fore("cyan");
+			// lightgrey
+			case 37:
+				r += fore("lightgrey");
+			// darkgrey
+			case 90:
+				r += fore("darkgrey");
+			// lightred
+			case 91:
+				r += fore("lightred");
+			// lightgreen
+			case 92:
+				r += fore("lightgreen");
+			// yellow
+			case 93:
+				r += fore("yellow");
+			// lightblue
+			case 94:
+				r += fore("lightblue");
+			// pink
+			case 95:
+				r += fore("pink");
+			// lightcyan
+			case 96:
+				r += fore("lightcyan");
+
+			// BG
+			// black
+			case 40:
+				r += back("black");
+			// red
+			case 41:
+				r += back("black");
+			// green
+			case 42:
+				r += back("black");
+			// orange
+			case 43:
+				r += back("black");
+			// blue
+			case 44:
+				r += back("black");
+			// purple
+			case 45:
+				r += back("black");
+			// cyan
+			case 46:
+				r += back("black");
+			// lightgrey
+			case 47:
+				r += back("black");
+
+			default:
+				r = _m;
+			}
+		});
+		return r;
+	});
+
+	reset();
+	return str;
+}
+
+function decolorize(msg: string): string {
+	const re = /\u001b\[\d{1,2}(;\d{1,2})*m/g;
+	return msg.replace(re, "");
+}
+
 function LogMessage(fields: { [k: string]: string }): string {
-	const message = fields.message;
+	let message = fields.message;
 
 	// this is a bit of a weird case, the logs we receive are RAW, so we basically
 	// want to delete any message data after the final carriage return, as it
-	// appear in journalctl
+	// appears in journalctl
 	const cr = message.lastIndexOf("\r");
-	if (cr > 0 && message.length > cr + 1) return message.substring(cr + 1);
-	return message;
+	if (cr > 0 && message.length > cr + 1) message = message.substring(cr + 1);
+	return decolorize(message);
 }
 </script>
 <style scoped>

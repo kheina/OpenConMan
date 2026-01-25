@@ -61,7 +61,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ steps.v.outputs.version }}
-          prerelease: ${{ contains(steps.v.outputs.version, 'dev') }}
+          prerelease: ${{ !contains(steps.v.outputs.version, 'main') }}
           draft: false
           files: bin/*
           generate_release_notes: true
