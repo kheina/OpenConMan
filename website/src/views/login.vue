@@ -18,13 +18,13 @@
 <script setup lang='ts'>
 import { ref, type Ref } from 'vue';
 import { auth } from '@/globals';
+import { cetch } from '@/utilities';
 
 const username: Ref<string> = ref("");
 const password: Ref<string> = ref("");
-const host = `${window.location.protocol}//${window.location.hostname}:5050`;
 
 function sendLogin() {
-	fetch(`${host}/v1/user/login`, {
+	cetch(`/v1/user/login`, {
 		method: "POST",
 		body: JSON.stringify({
 			username: username.value,
