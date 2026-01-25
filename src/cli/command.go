@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"errors"
+	stderr "errors"
 	"fmt"
 	"os"
 	"regexp"
@@ -9,6 +9,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/kheina/openconman/src/errors"
 	"github.com/kheina/openconman/src/util"
 	"github.com/mitchellh/go-wordwrap"
 )
@@ -296,21 +297,21 @@ func (i *CLI) Run(args []string) int {
 		}
 	}
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "cli error: %s\n", err.Error())
+		fmt.Fprintf(os.Stderr, "cli error: %s\n", errors.Tree(err))
 		return 1
 	}
 	if err := i.ParseArgs(args, append(i.args, cmd.Args()...)...); err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err.Error())
+		fmt.Fprintf(os.Stderr, "%s\n", errors.Tree(err))
 		return 1
 	}
 	if i.help_ {
 		return c.help()
 	}
 	if err = cmd.Run(); err != nil {
-		if errors.Is(err, UnimplementedCommandError) {
+		if stderr.Is(err, UnimplementedCommandError) {
 			return c.help()
 		}
-		fmt.Fprintln(os.Stderr, err.Error())
+		fmt.Fprintln(os.Stderr, errors.Tree(err))
 		return 1
 	}
 	return 0

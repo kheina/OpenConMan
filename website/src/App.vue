@@ -61,6 +61,8 @@ import { ref, watch, type Ref } from 'vue';
 import { auth } from '@/globals';
 import { cetch, GetCookie } from '@/utilities';
 
+console.debug("mode:", import.meta.env.MODE);
+
 interface Update {
 	current: string,
 	latest:  string,

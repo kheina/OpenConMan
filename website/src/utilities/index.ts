@@ -53,7 +53,17 @@ interface CetchOptions {
 	trace?: string,
 	signal?: AbortSignal,
 }
-
+let _env: "DEV" | "PROD" = "DEV";
+switch (import.meta.env.MODE) {
+case "development":
+	break;
+case "production":
+	_env = "PROD";
+default:
+	console.warn("unknown environment:", import.meta.env.MODE, "running as PROD");
+	_env = "PROD";
+}
+const env: "DEV" | "PROD" = _env;
 /**
  * 
  * @param url 
@@ -80,7 +90,14 @@ export async function cetch(url: string, options: CetchOptions = {}): Promise<Re
 	}
 
 	if (url.startsWith("/")) {
-		url = window.location.origin + url;
+		switch (env) {
+		case "DEV":
+			const host = `${window.location.protocol}//${window.location.hostname}:5050`;
+			url = host + url;
+			break;
+		default:
+			url = window.location.origin + url;
+		}
 	}
 
 	let response: Response;

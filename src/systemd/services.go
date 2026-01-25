@@ -142,24 +142,29 @@ func (s *Server) ListServices(req *srv.GetServiceStatusesRequest, stream grpc.Se
 	if err := auth.Authorize(ctx, auth.List, auth.Systemd); err != nil {
 		return errors.Wrap(op, err, "failed to authorize request")
 	}
-
+	wrap := func(err error, msg string) error {
+		if stderr.Is(err, context.Canceled) {
+			return nil
+		}
+		return errors.Wrap(op, err, msg)
+	}
 	for {
 		// fetch unit files (never started, permanently stopped, aliases)
 		files, err := s.dbus.ListUnitFilesByPatternsContext(ctx, allUnitFileStateStrings(), []string{"ocm-*"})
 		if err != nil {
-			return errors.Wrap(op, err, "failed to list systemd unit files")
+			return wrap(err, "failed to list systemd unit files")
 		}
 
 		// fetch active units (stopped, currently running, etc)
 		units, err := s.dbus.ListUnitsByPatternsContext(ctx, allServiceUnitStateStrings(), []string{"ocm-*"})
 		if err != nil {
-			return errors.Wrap(op, err, "failed to list systemd active units")
+			return wrap(err, "failed to list systemd active units")
 		}
 
 		// resolve aliases
 		aliases, err := s.dbus.ListUnitsByNamesContext(ctx, getAliasNames(files))
 		if err != nil {
-			return errors.Wrap(op, err, "failed to list systemd aliased units")
+			return wrap(err, "failed to list systemd aliased units")
 		}
 		units = append(units, aliases...)
 
@@ -444,8 +449,14 @@ func (s *Server) GetServiceLogs(req *srv.GetServiceLogsRequest, stream grpc.Serv
 		if err = j.SeekCursor(*req.Seek); err != nil {
 			return errors.Wrap(op, err, fmt.Sprintf("failed to seek to \"%s\" within journal", *req.Seek))
 		}
-		l := false
-		req.Live = &l
+
+		// we need to move back once so we dont return the journal entry we just seeked to
+		if _, err := j.Previous(); err != nil {
+			return errors.Wrap(op, err, "failed to iterate within journal")
+		}
+
+		live := false
+		req.Live = &live
 	} else if err = j.SeekTail(); err != nil {
 		return errors.Wrap(op, err, "failed to seek to tail within journal")
 	}

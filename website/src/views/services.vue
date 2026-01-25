@@ -54,15 +54,20 @@
 						</div>
 					</div>
 				</div>
-				<div class='logs' v-else-if='logs'>
-					<div>
+				<div class='logs' v-else-if='logs !== undefined'>
+					<div v-if='logs === null'>
+						<div>
+							<span>loading</span>
+						</div>
+					</div>
+					<div v-else>
 						<div>
 							<span>logs: {{ logs.name }}</span>
 							<i class='material-icons-round' @click='() => { abort(); logs = undefined; }'>close</i>
 						</div>
 						<div v-if='logs.logs'>
 							<code v-for='l in logs.logs'>{{ LogMessage(l.fields) }}</code>
-							<button  @click='() => GetServiceLogs(logs ?? { name: "" })' v-show='logs.logs.length % 100 === 0'>load more</button>
+							<button  @click='() => GetServiceLogs(logs ?? { name: "" })' v-show='showmore'>load more</button>
 						</div>
 						<div v-else>
 							<div>
@@ -79,19 +84,18 @@
 	</div>
 </template>
 <script setup lang='ts'>
-import { onMounted, onUnmounted, ref, type Ref } from 'vue';
+import { onUnmounted, ref, type Ref } from 'vue';
 import type { UnitLogs, UnitStatus } from '@/types/systemd'; 
 import unitfiletemplate from '@/constants/unit_file';
 import CodeEditor from '@/components/CodeEditor.vue';
 import { cetch, JsonPipeThrough } from '@/utilities';
 
-const host = `${window.location.protocol}//${window.location.hostname}:5050`;
 const stopped: Set<string> = new Set(["dead", "disabled"]);
 const units: Ref<UnitStatus[] | null> = ref(null);
-const update: Ref<number | undefined> = ref();
 const newUnitContent: Ref<string | undefined> = ref();
 const newUnitName: Ref<string | undefined> = ref();
-const logs: Ref<UnitLogs | undefined> = ref();
+const logs: Ref<UnitLogs | null | undefined> = ref(); // null == loading
+const showmore: Ref<Boolean> = ref(false);
 
 let _abort = new AbortController();
 const abort = () => {
@@ -159,25 +163,41 @@ function DeleteService(u: UnitStatus) {
 }
 
 function GetServiceLogs(u: { name: string }) {
+	showmore.value = false;
 	let url = `/v1/service/logs/${u.name}`
+	const lines = 100;
 	let live = false;
-	if (logs.value) url += "?seek=" + encodeURIComponent(logs.value.logs[logs.value.logs.length-1].cursor);
-	else {
+	if (logs.value) {
+		url += "?seek=" + encodeURIComponent(logs.value.logs[logs.value.logs.length-1].cursor);
+	} else {
+		logs.value = null;
 		url += "?live=1";
 		live = true;
 	}
+	url += `&lines=${lines}`;
 
 	const abort = _abort;
 	cetch(url, {
 		signal: abort.signal,
 	}).then(res => JsonPipeThrough(res, abort, (r: UnitLogs) => {
-		if (logs.value) {
-			if (live) logs.value.logs.unshift(...r.logs);
-			else logs.value.logs = logs.value.logs.concat(r.logs);
-		} else logs.value = r;
+		if (live) {
+			if (logs.value) {
+				logs.value.logs.unshift(...r.logs);
+			} else {
+				logs.value = r;
+				showmore.value = r.logs.length === lines;
+			}
+		} else {
+			if (logs.value) {
+				logs.value.logs = logs.value.logs.concat(r.logs);
+			} else {
+				logs.value = r;
+			}
+			showmore.value = r.logs.length === lines;
+		}
 	})).catch(
 		console.error
-	).finally(abort.abort);
+	);
 }
 
 function CreateService() {
