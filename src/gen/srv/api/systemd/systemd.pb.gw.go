@@ -35,7 +35,9 @@ var (
 	_ = metadata.Join
 )
 
-func request_Systemd_ListServices_0(ctx context.Context, marshaler runtime.Marshaler, client SystemdClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+var filter_Systemd_ListServices_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+
+func request_Systemd_ListServices_0(ctx context.Context, marshaler runtime.Marshaler, client SystemdClient, req *http.Request, pathParams map[string]string) (Systemd_ListServicesClient, runtime.ServerMetadata, error) {
 	var (
 		protoReq GetServiceStatusesRequest
 		metadata runtime.ServerMetadata
@@ -43,22 +45,27 @@ func request_Systemd_ListServices_0(ctx context.Context, marshaler runtime.Marsh
 	if req.Body != nil {
 		_, _ = io.Copy(io.Discard, req.Body)
 	}
-	msg, err := client.ListServices(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-}
-
-func local_request_Systemd_ListServices_0(ctx context.Context, marshaler runtime.Marshaler, server SystemdServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var (
-		protoReq GetServiceStatusesRequest
-		metadata runtime.ServerMetadata
-	)
-	msg, err := server.ListServices(ctx, &protoReq)
-	return msg, metadata, err
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Systemd_ListServices_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	stream, err := client.ListServices(ctx, &protoReq)
+	if err != nil {
+		return nil, metadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, metadata, err
+	}
+	metadata.HeaderMD = header
+	return stream, metadata, nil
 }
 
 func request_Systemd_ListAllServices_0(ctx context.Context, marshaler runtime.Marshaler, client SystemdClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq GetServiceStatusesRequest
+		protoReq ListAllServiceStatusesRequest
 		metadata runtime.ServerMetadata
 	)
 	if req.Body != nil {
@@ -70,7 +77,7 @@ func request_Systemd_ListAllServices_0(ctx context.Context, marshaler runtime.Ma
 
 func local_request_Systemd_ListAllServices_0(ctx context.Context, marshaler runtime.Marshaler, server SystemdServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var (
-		protoReq GetServiceStatusesRequest
+		protoReq ListAllServiceStatusesRequest
 		metadata runtime.ServerMetadata
 	)
 	msg, err := server.ListAllServices(ctx, &protoReq)
@@ -368,24 +375,10 @@ func request_Systemd_GetService_0(ctx context.Context, marshaler runtime.Marshal
 // GRPC interceptors will not work for this type of registration. To use interceptors, you must use the "runtime.WithMiddlewares" option in the "runtime.NewServeMux" call.
 func RegisterSystemdHandlerServer(ctx context.Context, mux *runtime.ServeMux, server SystemdServer) error {
 	mux.Handle(http.MethodGet, pattern_Systemd_ListServices_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
-		ctx, cancel := context.WithCancel(req.Context())
-		defer cancel()
-		var stream runtime.ServerTransportStream
-		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		annotatedContext, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/server.api.systemd.v1.Systemd/ListServices", runtime.WithHTTPPathPattern("/v1/services"))
-		if err != nil {
-			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		resp, md, err := local_request_Systemd_ListServices_0(annotatedContext, inboundMarshaler, server, req, pathParams)
-		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
-		annotatedContext = runtime.NewServerMetadataContext(annotatedContext, md)
-		if err != nil {
-			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
-			return
-		}
-		forward_Systemd_ListServices_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		err := status.Error(codes.Unimplemented, "streaming calls are not yet supported in the in-process transport")
+		_, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+		return
 	})
 	mux.Handle(http.MethodGet, pattern_Systemd_ListAllServices_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -596,7 +589,7 @@ func RegisterSystemdHandlerClient(ctx context.Context, mux *runtime.ServeMux, cl
 			runtime.HTTPError(annotatedContext, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		forward_Systemd_ListServices_0(annotatedContext, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_Systemd_ListServices_0(annotatedContext, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 	})
 	mux.Handle(http.MethodGet, pattern_Systemd_ListAllServices_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
@@ -786,7 +779,7 @@ var (
 )
 
 var (
-	forward_Systemd_ListServices_0       = runtime.ForwardResponseMessage
+	forward_Systemd_ListServices_0       = runtime.ForwardResponseStream
 	forward_Systemd_ListAllServices_0    = runtime.ForwardResponseMessage
 	forward_Systemd_PutServiceAlias_0    = runtime.ForwardResponseMessage
 	forward_Systemd_DeleteServiceAlias_0 = runtime.ForwardResponseMessage

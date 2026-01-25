@@ -68,7 +68,7 @@ func (s *Server) GetService(req *srv.GetServiceRequest, stream grpc.ServerStream
 	}
 }
 
-func (s *Server) ListAllServices(ctx context.Context, req *srv.GetServiceStatusesRequest) (*srv.GetServiceStatusesResponse, error) {
+func (s *Server) ListAllServices(ctx context.Context, req *srv.ListAllServiceStatusesRequest) (*srv.GetServiceStatusesResponse, error) {
 	const op = "systemd.(Server).ListServices"
 	if err := auth.Authorize(ctx, auth.List, auth.Systemd); err != nil {
 		return nil, errors.Wrap(op, err, "failed to authorize request")
@@ -136,88 +136,98 @@ func (s *Server) ListAllServices(ctx context.Context, req *srv.GetServiceStatuse
 	}, nil
 }
 
-func (s *Server) ListServices(ctx context.Context, req *srv.GetServiceStatusesRequest) (*srv.GetServiceStatusesResponse, error) {
+func (s *Server) ListServices(req *srv.GetServiceStatusesRequest, stream grpc.ServerStreamingServer[srv.GetServiceStatusesResponse]) error {
 	const op = "systemd.(Server).ListServices"
+	ctx := stream.Context()
 	if err := auth.Authorize(ctx, auth.List, auth.Systemd); err != nil {
-		return nil, errors.Wrap(op, err, "failed to authorize request")
+		return errors.Wrap(op, err, "failed to authorize request")
 	}
 
-	// fetch unit files (never started, permanently stopped, aliases)
-	files, err := s.dbus.ListUnitFilesByPatternsContext(ctx, allUnitFileStateStrings(), []string{"ocm-*"})
-	if err != nil {
-		return nil, errors.Wrap(op, err, "failed to list systemd unit files")
-	}
-
-	// fetch active units (stopped, currently running, etc)
-	units, err := s.dbus.ListUnitsByPatternsContext(ctx, allServiceUnitStateStrings(), []string{"ocm-*"})
-	if err != nil {
-		return nil, errors.Wrap(op, err, "failed to list systemd active units")
-	}
-
-	// resolve aliases
-	aliases, err := s.dbus.ListUnitsByNamesContext(ctx, getAliasNames(files))
-	if err != nil {
-		return nil, errors.Wrap(op, err, "failed to list systemd aliased units")
-	}
-	units = append(units, aliases...)
-
-	amap := aliasMap(files)
-	names := map[string]*pb.UnitStatus{}
-	items := []*pb.UnitStatus{}
-	for _, f := range files {
-		if f.Type == string(alias) {
-			continue
+	for {
+		// fetch unit files (never started, permanently stopped, aliases)
+		files, err := s.dbus.ListUnitFilesByPatternsContext(ctx, allUnitFileStateStrings(), []string{"ocm-*"})
+		if err != nil {
+			return errors.Wrap(op, err, "failed to list systemd unit files")
 		}
-		if i := strings.LastIndexByte(f.Path, '/'); i >= 0 {
-			u := &pb.UnitStatus{
-				Name:      f.Path[i+1:],
-				LoadState: string(disabled),
-				JobType:   f.Type,
-				JobPath:   f.Path,
+
+		// fetch active units (stopped, currently running, etc)
+		units, err := s.dbus.ListUnitsByPatternsContext(ctx, allServiceUnitStateStrings(), []string{"ocm-*"})
+		if err != nil {
+			return errors.Wrap(op, err, "failed to list systemd active units")
+		}
+
+		// resolve aliases
+		aliases, err := s.dbus.ListUnitsByNamesContext(ctx, getAliasNames(files))
+		if err != nil {
+			return errors.Wrap(op, err, "failed to list systemd aliased units")
+		}
+		units = append(units, aliases...)
+
+		amap := aliasMap(files)
+		names := map[string]*pb.UnitStatus{}
+		items := []*pb.UnitStatus{}
+		for _, f := range files {
+			if f.Type == string(alias) {
+				continue
 			}
-			names[u.Name] = u
-			items = append(items, u)
-		} else {
-			// eh?
-		}
-	}
-	for _, u := range units {
-		if _, ok := names[u.Name]; ok {
-			*(names[u.Name]) = pb.UnitStatus{
-				Name:        u.Name,
-				Description: u.Description,
-				LoadState:   u.LoadState,
-				ActiveState: u.ActiveState,
-				SubState:    u.SubState,
-				Followed:    u.Followed,
-				Path:        string(u.Path),
-				JobId:       u.JobId,
-				JobType:     u.JobType,
-				JobPath:     string(u.JobPath),
-				Alias:       util.OptionalString(amap[u.Name]),
+			if i := strings.LastIndexByte(f.Path, '/'); i >= 0 {
+				u := &pb.UnitStatus{
+					Name:      f.Path[i+1:],
+					LoadState: string(disabled),
+					JobType:   f.Type,
+					JobPath:   f.Path,
+				}
+				names[u.Name] = u
+				items = append(items, u)
+			} else {
+				// eh?
 			}
-		} else {
-			items = append(items, &pb.UnitStatus{
-				Name:        u.Name,
-				Description: u.Description,
-				LoadState:   u.LoadState,
-				ActiveState: u.ActiveState,
-				SubState:    u.SubState,
-				Followed:    u.Followed,
-				Path:        string(u.Path),
-				JobId:       u.JobId,
-				JobType:     u.JobType,
-				JobPath:     string(u.JobPath),
-				Alias:       util.OptionalString(amap[u.Name]),
-			})
 		}
+		for _, u := range units {
+			if _, ok := names[u.Name]; ok {
+				*(names[u.Name]) = pb.UnitStatus{
+					Name:        u.Name,
+					Description: u.Description,
+					LoadState:   u.LoadState,
+					ActiveState: u.ActiveState,
+					SubState:    u.SubState,
+					Followed:    u.Followed,
+					Path:        string(u.Path),
+					JobId:       u.JobId,
+					JobType:     u.JobType,
+					JobPath:     string(u.JobPath),
+					Alias:       util.OptionalString(amap[u.Name]),
+				}
+			} else {
+				items = append(items, &pb.UnitStatus{
+					Name:        u.Name,
+					Description: u.Description,
+					LoadState:   u.LoadState,
+					ActiveState: u.ActiveState,
+					SubState:    u.SubState,
+					Followed:    u.Followed,
+					Path:        string(u.Path),
+					JobId:       u.JobId,
+					JobType:     u.JobType,
+					JobPath:     string(u.JobPath),
+					Alias:       util.OptionalString(amap[u.Name]),
+				})
+			}
+		}
+		sort.Slice(items, func(a, b int) bool {
+			return items[a].Name < items[b].Name
+		})
+		stream.Send(&srv.GetServiceStatusesResponse{
+			Items: items,
+		})
+		switch {
+		case !req.Live:
+			return nil
+		case ctx.Err() != nil:
+			return nil
+		}
+		time.Sleep(1 * time.Second)
 	}
-	sort.Slice(items, func(a, b int) bool {
-		return items[a].Name < items[b].Name
-	})
-	return &srv.GetServiceStatusesResponse{
-		Items: items,
-	}, nil
 }
 
 func (s *Server) EnableService(ctx context.Context, req *srv.GetEnableServiceRequest) (*srv.GetServiceResponse, error) {

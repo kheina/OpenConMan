@@ -35,8 +35,8 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SystemdClient interface {
-	ListServices(ctx context.Context, in *GetServiceStatusesRequest, opts ...grpc.CallOption) (*GetServiceStatusesResponse, error)
-	ListAllServices(ctx context.Context, in *GetServiceStatusesRequest, opts ...grpc.CallOption) (*GetServiceStatusesResponse, error)
+	ListServices(ctx context.Context, in *GetServiceStatusesRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[GetServiceStatusesResponse], error)
+	ListAllServices(ctx context.Context, in *ListAllServiceStatusesRequest, opts ...grpc.CallOption) (*GetServiceStatusesResponse, error)
 	PutServiceAlias(ctx context.Context, in *PutServiceAliasRequest, opts ...grpc.CallOption) (*PutServiceAliasResponse, error)
 	DeleteServiceAlias(ctx context.Context, in *DeleteServiceRequest, opts ...grpc.CallOption) (*DeleteServiceResponse, error)
 	PutService(ctx context.Context, in *PutServiceRequest, opts ...grpc.CallOption) (*PutServiceResponse, error)
@@ -55,17 +55,26 @@ func NewSystemdClient(cc grpc.ClientConnInterface) SystemdClient {
 	return &systemdClient{cc}
 }
 
-func (c *systemdClient) ListServices(ctx context.Context, in *GetServiceStatusesRequest, opts ...grpc.CallOption) (*GetServiceStatusesResponse, error) {
+func (c *systemdClient) ListServices(ctx context.Context, in *GetServiceStatusesRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[GetServiceStatusesResponse], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetServiceStatusesResponse)
-	err := c.cc.Invoke(ctx, Systemd_ListServices_FullMethodName, in, out, cOpts...)
+	stream, err := c.cc.NewStream(ctx, &Systemd_ServiceDesc.Streams[0], Systemd_ListServices_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &grpc.GenericClientStream[GetServiceStatusesRequest, GetServiceStatusesResponse]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
 }
 
-func (c *systemdClient) ListAllServices(ctx context.Context, in *GetServiceStatusesRequest, opts ...grpc.CallOption) (*GetServiceStatusesResponse, error) {
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Systemd_ListServicesClient = grpc.ServerStreamingClient[GetServiceStatusesResponse]
+
+func (c *systemdClient) ListAllServices(ctx context.Context, in *ListAllServiceStatusesRequest, opts ...grpc.CallOption) (*GetServiceStatusesResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetServiceStatusesResponse)
 	err := c.cc.Invoke(ctx, Systemd_ListAllServices_FullMethodName, in, out, cOpts...)
@@ -137,7 +146,7 @@ func (c *systemdClient) DisableService(ctx context.Context, in *GetEnableService
 
 func (c *systemdClient) GetServiceLogs(ctx context.Context, in *GetServiceLogsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[GetServiceLogsResponse], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &Systemd_ServiceDesc.Streams[0], Systemd_GetServiceLogs_FullMethodName, cOpts...)
+	stream, err := c.cc.NewStream(ctx, &Systemd_ServiceDesc.Streams[1], Systemd_GetServiceLogs_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +165,7 @@ type Systemd_GetServiceLogsClient = grpc.ServerStreamingClient[GetServiceLogsRes
 
 func (c *systemdClient) GetService(ctx context.Context, in *GetServiceRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[GetServiceResponse], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &Systemd_ServiceDesc.Streams[1], Systemd_GetService_FullMethodName, cOpts...)
+	stream, err := c.cc.NewStream(ctx, &Systemd_ServiceDesc.Streams[2], Systemd_GetService_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -177,8 +186,8 @@ type Systemd_GetServiceClient = grpc.ServerStreamingClient[GetServiceResponse]
 // All implementations must embed UnimplementedSystemdServer
 // for forward compatibility.
 type SystemdServer interface {
-	ListServices(context.Context, *GetServiceStatusesRequest) (*GetServiceStatusesResponse, error)
-	ListAllServices(context.Context, *GetServiceStatusesRequest) (*GetServiceStatusesResponse, error)
+	ListServices(*GetServiceStatusesRequest, grpc.ServerStreamingServer[GetServiceStatusesResponse]) error
+	ListAllServices(context.Context, *ListAllServiceStatusesRequest) (*GetServiceStatusesResponse, error)
 	PutServiceAlias(context.Context, *PutServiceAliasRequest) (*PutServiceAliasResponse, error)
 	DeleteServiceAlias(context.Context, *DeleteServiceRequest) (*DeleteServiceResponse, error)
 	PutService(context.Context, *PutServiceRequest) (*PutServiceResponse, error)
@@ -197,10 +206,10 @@ type SystemdServer interface {
 // pointer dereference when methods are called.
 type UnimplementedSystemdServer struct{}
 
-func (UnimplementedSystemdServer) ListServices(context.Context, *GetServiceStatusesRequest) (*GetServiceStatusesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListServices not implemented")
+func (UnimplementedSystemdServer) ListServices(*GetServiceStatusesRequest, grpc.ServerStreamingServer[GetServiceStatusesResponse]) error {
+	return status.Errorf(codes.Unimplemented, "method ListServices not implemented")
 }
-func (UnimplementedSystemdServer) ListAllServices(context.Context, *GetServiceStatusesRequest) (*GetServiceStatusesResponse, error) {
+func (UnimplementedSystemdServer) ListAllServices(context.Context, *ListAllServiceStatusesRequest) (*GetServiceStatusesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListAllServices not implemented")
 }
 func (UnimplementedSystemdServer) PutServiceAlias(context.Context, *PutServiceAliasRequest) (*PutServiceAliasResponse, error) {
@@ -248,26 +257,19 @@ func RegisterSystemdServer(s grpc.ServiceRegistrar, srv SystemdServer) {
 	s.RegisterService(&Systemd_ServiceDesc, srv)
 }
 
-func _Systemd_ListServices_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetServiceStatusesRequest)
-	if err := dec(in); err != nil {
-		return nil, err
+func _Systemd_ListServices_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GetServiceStatusesRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
 	}
-	if interceptor == nil {
-		return srv.(SystemdServer).ListServices(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Systemd_ListServices_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SystemdServer).ListServices(ctx, req.(*GetServiceStatusesRequest))
-	}
-	return interceptor(ctx, in, info, handler)
+	return srv.(SystemdServer).ListServices(m, &grpc.GenericServerStream[GetServiceStatusesRequest, GetServiceStatusesResponse]{ServerStream: stream})
 }
 
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Systemd_ListServicesServer = grpc.ServerStreamingServer[GetServiceStatusesResponse]
+
 func _Systemd_ListAllServices_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetServiceStatusesRequest)
+	in := new(ListAllServiceStatusesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -279,7 +281,7 @@ func _Systemd_ListAllServices_Handler(srv interface{}, ctx context.Context, dec 
 		FullMethod: Systemd_ListAllServices_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SystemdServer).ListAllServices(ctx, req.(*GetServiceStatusesRequest))
+		return srv.(SystemdServer).ListAllServices(ctx, req.(*ListAllServiceStatusesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -422,10 +424,6 @@ var Systemd_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*SystemdServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "ListServices",
-			Handler:    _Systemd_ListServices_Handler,
-		},
-		{
 			MethodName: "ListAllServices",
 			Handler:    _Systemd_ListAllServices_Handler,
 		},
@@ -455,6 +453,11 @@ var Systemd_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "ListServices",
+			Handler:       _Systemd_ListServices_Handler,
+			ServerStreams: true,
+		},
 		{
 			StreamName:    "GetServiceLogs",
 			Handler:       _Systemd_GetServiceLogs_Handler,

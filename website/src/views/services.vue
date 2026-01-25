@@ -98,9 +98,18 @@ const abort = () => {
 	_abort.abort();
 	_abort = new AbortController();
 };
-onMounted(() => update.value = Updater());
 onUnmounted(() => _abort.abort());
-onUnmounted(() => update.value = clearTimeout(update.value) ?? undefined);
+onUnmounted(() => svcAbort.abort());
+
+const svcAbort = new AbortController();
+
+cetch("/v1/services?live=1", {
+	signal: svcAbort.signal,
+}).then(res => JsonPipeThrough(res, svcAbort, (r: { items: UnitStatus[] }) => {
+	units.value = r.items;
+})).catch(
+	console.error
+);
 
 function StartService(u: UnitStatus) {
 	cetch(
@@ -186,21 +195,6 @@ function CreateService() {
 	}).catch(
 		console.error
 	);
-}
-
-function Updater(): number {
-	cetch(
-		"/v1/services"
-	).then(
-		r => r.json()
-	).then((r:{ items: UnitStatus[] }) =>
-		units.value = r.items
-	).then(() => {
-		if (update.value !== undefined) update.value = setTimeout(Updater, 1000);
-	}).catch(
-		console.error
-	);
-	return 0;
 }
 
 function UnitState(u: UnitStatus): string {

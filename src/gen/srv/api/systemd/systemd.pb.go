@@ -24,15 +24,54 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type GetServiceStatusesRequest struct {
+type ListAllServiceStatusesRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListAllServiceStatusesRequest) Reset() {
+	*x = ListAllServiceStatusesRequest{}
+	mi := &file_services_srv_api_systemd_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListAllServiceStatusesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListAllServiceStatusesRequest) ProtoMessage() {}
+
+func (x *ListAllServiceStatusesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_services_srv_api_systemd_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListAllServiceStatusesRequest.ProtoReflect.Descriptor instead.
+func (*ListAllServiceStatusesRequest) Descriptor() ([]byte, []int) {
+	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{0}
+}
+
+type GetServiceStatusesRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Should the connection stay open and send updates on the status of the
+	// service over the same connection
+	Live          bool `protobuf:"varint,10,opt,name=live,proto3" json:"live,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GetServiceStatusesRequest) Reset() {
 	*x = GetServiceStatusesRequest{}
-	mi := &file_services_srv_api_systemd_proto_msgTypes[0]
+	mi := &file_services_srv_api_systemd_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -44,7 +83,7 @@ func (x *GetServiceStatusesRequest) String() string {
 func (*GetServiceStatusesRequest) ProtoMessage() {}
 
 func (x *GetServiceStatusesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_services_srv_api_systemd_proto_msgTypes[0]
+	mi := &file_services_srv_api_systemd_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -57,7 +96,14 @@ func (x *GetServiceStatusesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetServiceStatusesRequest.ProtoReflect.Descriptor instead.
 func (*GetServiceStatusesRequest) Descriptor() ([]byte, []int) {
-	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{0}
+	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *GetServiceStatusesRequest) GetLive() bool {
+	if x != nil {
+		return x.Live
+	}
+	return false
 }
 
 type GetServiceStatusesResponse struct {
@@ -69,7 +115,7 @@ type GetServiceStatusesResponse struct {
 
 func (x *GetServiceStatusesResponse) Reset() {
 	*x = GetServiceStatusesResponse{}
-	mi := &file_services_srv_api_systemd_proto_msgTypes[1]
+	mi := &file_services_srv_api_systemd_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -81,7 +127,7 @@ func (x *GetServiceStatusesResponse) String() string {
 func (*GetServiceStatusesResponse) ProtoMessage() {}
 
 func (x *GetServiceStatusesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_services_srv_api_systemd_proto_msgTypes[1]
+	mi := &file_services_srv_api_systemd_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -94,7 +140,7 @@ func (x *GetServiceStatusesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetServiceStatusesResponse.ProtoReflect.Descriptor instead.
 func (*GetServiceStatusesResponse) Descriptor() ([]byte, []int) {
-	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{1}
+	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *GetServiceStatusesResponse) GetItems() []*systemd.UnitStatus {
@@ -114,7 +160,7 @@ type GetEnableServiceRequest struct {
 
 func (x *GetEnableServiceRequest) Reset() {
 	*x = GetEnableServiceRequest{}
-	mi := &file_services_srv_api_systemd_proto_msgTypes[2]
+	mi := &file_services_srv_api_systemd_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -126,7 +172,7 @@ func (x *GetEnableServiceRequest) String() string {
 func (*GetEnableServiceRequest) ProtoMessage() {}
 
 func (x *GetEnableServiceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_services_srv_api_systemd_proto_msgTypes[2]
+	mi := &file_services_srv_api_systemd_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -139,7 +185,7 @@ func (x *GetEnableServiceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetEnableServiceRequest.ProtoReflect.Descriptor instead.
 func (*GetEnableServiceRequest) Descriptor() ([]byte, []int) {
-	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{2}
+	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *GetEnableServiceRequest) GetName() string {
@@ -162,7 +208,7 @@ type GetServiceRequest struct {
 
 func (x *GetServiceRequest) Reset() {
 	*x = GetServiceRequest{}
-	mi := &file_services_srv_api_systemd_proto_msgTypes[3]
+	mi := &file_services_srv_api_systemd_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -174,7 +220,7 @@ func (x *GetServiceRequest) String() string {
 func (*GetServiceRequest) ProtoMessage() {}
 
 func (x *GetServiceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_services_srv_api_systemd_proto_msgTypes[3]
+	mi := &file_services_srv_api_systemd_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -187,7 +233,7 @@ func (x *GetServiceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetServiceRequest.ProtoReflect.Descriptor instead.
 func (*GetServiceRequest) Descriptor() ([]byte, []int) {
-	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{3}
+	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *GetServiceRequest) GetName() string {
@@ -213,7 +259,7 @@ type GetServiceResponse struct {
 
 func (x *GetServiceResponse) Reset() {
 	*x = GetServiceResponse{}
-	mi := &file_services_srv_api_systemd_proto_msgTypes[4]
+	mi := &file_services_srv_api_systemd_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -225,7 +271,7 @@ func (x *GetServiceResponse) String() string {
 func (*GetServiceResponse) ProtoMessage() {}
 
 func (x *GetServiceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_services_srv_api_systemd_proto_msgTypes[4]
+	mi := &file_services_srv_api_systemd_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -238,7 +284,7 @@ func (x *GetServiceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetServiceResponse.ProtoReflect.Descriptor instead.
 func (*GetServiceResponse) Descriptor() ([]byte, []int) {
-	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{4}
+	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *GetServiceResponse) GetItem() *systemd.UnitStatus {
@@ -258,7 +304,7 @@ type PutServiceAliasRequest struct {
 
 func (x *PutServiceAliasRequest) Reset() {
 	*x = PutServiceAliasRequest{}
-	mi := &file_services_srv_api_systemd_proto_msgTypes[5]
+	mi := &file_services_srv_api_systemd_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -270,7 +316,7 @@ func (x *PutServiceAliasRequest) String() string {
 func (*PutServiceAliasRequest) ProtoMessage() {}
 
 func (x *PutServiceAliasRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_services_srv_api_systemd_proto_msgTypes[5]
+	mi := &file_services_srv_api_systemd_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -283,7 +329,7 @@ func (x *PutServiceAliasRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PutServiceAliasRequest.ProtoReflect.Descriptor instead.
 func (*PutServiceAliasRequest) Descriptor() ([]byte, []int) {
-	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{5}
+	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *PutServiceAliasRequest) GetName() string {
@@ -302,7 +348,7 @@ type PutServiceAliasResponse struct {
 
 func (x *PutServiceAliasResponse) Reset() {
 	*x = PutServiceAliasResponse{}
-	mi := &file_services_srv_api_systemd_proto_msgTypes[6]
+	mi := &file_services_srv_api_systemd_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -314,7 +360,7 @@ func (x *PutServiceAliasResponse) String() string {
 func (*PutServiceAliasResponse) ProtoMessage() {}
 
 func (x *PutServiceAliasResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_services_srv_api_systemd_proto_msgTypes[6]
+	mi := &file_services_srv_api_systemd_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -327,7 +373,7 @@ func (x *PutServiceAliasResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PutServiceAliasResponse.ProtoReflect.Descriptor instead.
 func (*PutServiceAliasResponse) Descriptor() ([]byte, []int) {
-	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{6}
+	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *PutServiceAliasResponse) GetItem() *systemd.UnitStatus {
@@ -347,7 +393,7 @@ type DeleteServiceRequest struct {
 
 func (x *DeleteServiceRequest) Reset() {
 	*x = DeleteServiceRequest{}
-	mi := &file_services_srv_api_systemd_proto_msgTypes[7]
+	mi := &file_services_srv_api_systemd_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -359,7 +405,7 @@ func (x *DeleteServiceRequest) String() string {
 func (*DeleteServiceRequest) ProtoMessage() {}
 
 func (x *DeleteServiceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_services_srv_api_systemd_proto_msgTypes[7]
+	mi := &file_services_srv_api_systemd_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -372,7 +418,7 @@ func (x *DeleteServiceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteServiceRequest.ProtoReflect.Descriptor instead.
 func (*DeleteServiceRequest) Descriptor() ([]byte, []int) {
-	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{7}
+	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *DeleteServiceRequest) GetName() string {
@@ -390,7 +436,7 @@ type DeleteServiceResponse struct {
 
 func (x *DeleteServiceResponse) Reset() {
 	*x = DeleteServiceResponse{}
-	mi := &file_services_srv_api_systemd_proto_msgTypes[8]
+	mi := &file_services_srv_api_systemd_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -402,7 +448,7 @@ func (x *DeleteServiceResponse) String() string {
 func (*DeleteServiceResponse) ProtoMessage() {}
 
 func (x *DeleteServiceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_services_srv_api_systemd_proto_msgTypes[8]
+	mi := &file_services_srv_api_systemd_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -415,7 +461,7 @@ func (x *DeleteServiceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteServiceResponse.ProtoReflect.Descriptor instead.
 func (*DeleteServiceResponse) Descriptor() ([]byte, []int) {
-	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{8}
+	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{9}
 }
 
 type PutServiceRequest struct {
@@ -430,7 +476,7 @@ type PutServiceRequest struct {
 
 func (x *PutServiceRequest) Reset() {
 	*x = PutServiceRequest{}
-	mi := &file_services_srv_api_systemd_proto_msgTypes[9]
+	mi := &file_services_srv_api_systemd_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -442,7 +488,7 @@ func (x *PutServiceRequest) String() string {
 func (*PutServiceRequest) ProtoMessage() {}
 
 func (x *PutServiceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_services_srv_api_systemd_proto_msgTypes[9]
+	mi := &file_services_srv_api_systemd_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -455,7 +501,7 @@ func (x *PutServiceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PutServiceRequest.ProtoReflect.Descriptor instead.
 func (*PutServiceRequest) Descriptor() ([]byte, []int) {
-	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{9}
+	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *PutServiceRequest) GetName() string {
@@ -481,7 +527,7 @@ type PutServiceResponse struct {
 
 func (x *PutServiceResponse) Reset() {
 	*x = PutServiceResponse{}
-	mi := &file_services_srv_api_systemd_proto_msgTypes[10]
+	mi := &file_services_srv_api_systemd_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -493,7 +539,7 @@ func (x *PutServiceResponse) String() string {
 func (*PutServiceResponse) ProtoMessage() {}
 
 func (x *PutServiceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_services_srv_api_systemd_proto_msgTypes[10]
+	mi := &file_services_srv_api_systemd_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -506,7 +552,7 @@ func (x *PutServiceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PutServiceResponse.ProtoReflect.Descriptor instead.
 func (*PutServiceResponse) Descriptor() ([]byte, []int) {
-	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{10}
+	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *PutServiceResponse) GetItem() *systemd.UnitStatus {
@@ -533,7 +579,7 @@ type GetServiceLogsRequest struct {
 
 func (x *GetServiceLogsRequest) Reset() {
 	*x = GetServiceLogsRequest{}
-	mi := &file_services_srv_api_systemd_proto_msgTypes[11]
+	mi := &file_services_srv_api_systemd_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -545,7 +591,7 @@ func (x *GetServiceLogsRequest) String() string {
 func (*GetServiceLogsRequest) ProtoMessage() {}
 
 func (x *GetServiceLogsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_services_srv_api_systemd_proto_msgTypes[11]
+	mi := &file_services_srv_api_systemd_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -558,7 +604,7 @@ func (x *GetServiceLogsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetServiceLogsRequest.ProtoReflect.Descriptor instead.
 func (*GetServiceLogsRequest) Descriptor() ([]byte, []int) {
-	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{11}
+	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *GetServiceLogsRequest) GetName() string {
@@ -600,7 +646,7 @@ type LogEntry struct {
 
 func (x *LogEntry) Reset() {
 	*x = LogEntry{}
-	mi := &file_services_srv_api_systemd_proto_msgTypes[12]
+	mi := &file_services_srv_api_systemd_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -612,7 +658,7 @@ func (x *LogEntry) String() string {
 func (*LogEntry) ProtoMessage() {}
 
 func (x *LogEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_services_srv_api_systemd_proto_msgTypes[12]
+	mi := &file_services_srv_api_systemd_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -625,7 +671,7 @@ func (x *LogEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LogEntry.ProtoReflect.Descriptor instead.
 func (*LogEntry) Descriptor() ([]byte, []int) {
-	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{12}
+	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *LogEntry) GetTimestamp() uint64 {
@@ -659,7 +705,7 @@ type GetServiceLogsResponse struct {
 
 func (x *GetServiceLogsResponse) Reset() {
 	*x = GetServiceLogsResponse{}
-	mi := &file_services_srv_api_systemd_proto_msgTypes[13]
+	mi := &file_services_srv_api_systemd_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -671,7 +717,7 @@ func (x *GetServiceLogsResponse) String() string {
 func (*GetServiceLogsResponse) ProtoMessage() {}
 
 func (x *GetServiceLogsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_services_srv_api_systemd_proto_msgTypes[13]
+	mi := &file_services_srv_api_systemd_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -684,7 +730,7 @@ func (x *GetServiceLogsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetServiceLogsResponse.ProtoReflect.Descriptor instead.
 func (*GetServiceLogsResponse) Descriptor() ([]byte, []int) {
-	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{13}
+	return file_services_srv_api_systemd_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *GetServiceLogsResponse) GetName() string {
@@ -705,8 +751,11 @@ var File_services_srv_api_systemd_proto protoreflect.FileDescriptor
 
 const file_services_srv_api_systemd_proto_rawDesc = "" +
 	"\n" +
-	"\x1eservices/srv/api/systemd.proto\x12\x15server.api.systemd.v1\x1a\x1eservices/pbs/api/systemd.proto\x1a\x1cgoogle/api/annotations.proto\x1a.protoc-gen-openapiv2/options/annotations.proto\"\x1b\n" +
-	"\x19GetServiceStatusesRequest\"Y\n" +
+	"\x1eservices/srv/api/systemd.proto\x12\x15server.api.systemd.v1\x1a\x1eservices/pbs/api/systemd.proto\x1a\x1cgoogle/api/annotations.proto\x1a.protoc-gen-openapiv2/options/annotations.proto\"\x1f\n" +
+	"\x1dListAllServiceStatusesRequest\"/\n" +
+	"\x19GetServiceStatusesRequest\x12\x12\n" +
+	"\x04live\x18\n" +
+	" \x01(\bR\x04live\"Y\n" +
 	"\x1aGetServiceStatusesResponse\x12;\n" +
 	"\x05items\x18\n" +
 	" \x03(\v2%.server.api.pbs.v1.systemd.UnitStatusR\x05items\"-\n" +
@@ -757,10 +806,10 @@ const file_services_srv_api_systemd_proto_rawDesc = "" +
 	"\x16GetServiceLogsResponse\x12\x12\n" +
 	"\x04name\x18\n" +
 	" \x01(\tR\x04name\x123\n" +
-	"\x04logs\x18\x14 \x03(\v2\x1f.server.api.systemd.v1.LogEntryR\x04logs2\xb6\v\n" +
-	"\aSystemd\x12\x89\x01\n" +
-	"\fListServices\x120.server.api.systemd.v1.GetServiceStatusesRequest\x1a1.server.api.systemd.v1.GetServiceStatusesResponse\"\x14\x82\xd3\xe4\x93\x02\x0e\x12\f/v1/services\x12\x90\x01\n" +
-	"\x0fListAllServices\x120.server.api.systemd.v1.GetServiceStatusesRequest\x1a1.server.api.systemd.v1.GetServiceStatusesResponse\"\x18\x82\xd3\xe4\x93\x02\x12\x12\x10/v1/services/all\x12\x94\x01\n" +
+	"\x04logs\x18\x14 \x03(\v2\x1f.server.api.systemd.v1.LogEntryR\x04logs2\xbc\v\n" +
+	"\aSystemd\x12\x8b\x01\n" +
+	"\fListServices\x120.server.api.systemd.v1.GetServiceStatusesRequest\x1a1.server.api.systemd.v1.GetServiceStatusesResponse\"\x14\x82\xd3\xe4\x93\x02\x0e\x12\f/v1/services0\x01\x12\x94\x01\n" +
+	"\x0fListAllServices\x124.server.api.systemd.v1.ListAllServiceStatusesRequest\x1a1.server.api.systemd.v1.GetServiceStatusesResponse\"\x18\x82\xd3\xe4\x93\x02\x12\x12\x10/v1/services/all\x12\x94\x01\n" +
 	"\x0fPutServiceAlias\x12-.server.api.systemd.v1.PutServiceAliasRequest\x1a..server.api.systemd.v1.PutServiceAliasResponse\"\"\x82\xd3\xe4\x93\x02\x1c:\x01*b\x04item\x1a\x11/v1/service/alias\x12\x91\x01\n" +
 	"\x12DeleteServiceAlias\x12+.server.api.systemd.v1.DeleteServiceRequest\x1a,.server.api.systemd.v1.DeleteServiceResponse\" \x82\xd3\xe4\x93\x02\x1a*\x18/v1/service/alias/{name}\x12\x7f\n" +
 	"\n" +
@@ -785,52 +834,53 @@ func file_services_srv_api_systemd_proto_rawDescGZIP() []byte {
 	return file_services_srv_api_systemd_proto_rawDescData
 }
 
-var file_services_srv_api_systemd_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
+var file_services_srv_api_systemd_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
 var file_services_srv_api_systemd_proto_goTypes = []any{
-	(*GetServiceStatusesRequest)(nil),  // 0: server.api.systemd.v1.GetServiceStatusesRequest
-	(*GetServiceStatusesResponse)(nil), // 1: server.api.systemd.v1.GetServiceStatusesResponse
-	(*GetEnableServiceRequest)(nil),    // 2: server.api.systemd.v1.GetEnableServiceRequest
-	(*GetServiceRequest)(nil),          // 3: server.api.systemd.v1.GetServiceRequest
-	(*GetServiceResponse)(nil),         // 4: server.api.systemd.v1.GetServiceResponse
-	(*PutServiceAliasRequest)(nil),     // 5: server.api.systemd.v1.PutServiceAliasRequest
-	(*PutServiceAliasResponse)(nil),    // 6: server.api.systemd.v1.PutServiceAliasResponse
-	(*DeleteServiceRequest)(nil),       // 7: server.api.systemd.v1.DeleteServiceRequest
-	(*DeleteServiceResponse)(nil),      // 8: server.api.systemd.v1.DeleteServiceResponse
-	(*PutServiceRequest)(nil),          // 9: server.api.systemd.v1.PutServiceRequest
-	(*PutServiceResponse)(nil),         // 10: server.api.systemd.v1.PutServiceResponse
-	(*GetServiceLogsRequest)(nil),      // 11: server.api.systemd.v1.GetServiceLogsRequest
-	(*LogEntry)(nil),                   // 12: server.api.systemd.v1.LogEntry
-	(*GetServiceLogsResponse)(nil),     // 13: server.api.systemd.v1.GetServiceLogsResponse
-	nil,                                // 14: server.api.systemd.v1.LogEntry.FieldsEntry
-	(*systemd.UnitStatus)(nil),         // 15: server.api.pbs.v1.systemd.UnitStatus
+	(*ListAllServiceStatusesRequest)(nil), // 0: server.api.systemd.v1.ListAllServiceStatusesRequest
+	(*GetServiceStatusesRequest)(nil),     // 1: server.api.systemd.v1.GetServiceStatusesRequest
+	(*GetServiceStatusesResponse)(nil),    // 2: server.api.systemd.v1.GetServiceStatusesResponse
+	(*GetEnableServiceRequest)(nil),       // 3: server.api.systemd.v1.GetEnableServiceRequest
+	(*GetServiceRequest)(nil),             // 4: server.api.systemd.v1.GetServiceRequest
+	(*GetServiceResponse)(nil),            // 5: server.api.systemd.v1.GetServiceResponse
+	(*PutServiceAliasRequest)(nil),        // 6: server.api.systemd.v1.PutServiceAliasRequest
+	(*PutServiceAliasResponse)(nil),       // 7: server.api.systemd.v1.PutServiceAliasResponse
+	(*DeleteServiceRequest)(nil),          // 8: server.api.systemd.v1.DeleteServiceRequest
+	(*DeleteServiceResponse)(nil),         // 9: server.api.systemd.v1.DeleteServiceResponse
+	(*PutServiceRequest)(nil),             // 10: server.api.systemd.v1.PutServiceRequest
+	(*PutServiceResponse)(nil),            // 11: server.api.systemd.v1.PutServiceResponse
+	(*GetServiceLogsRequest)(nil),         // 12: server.api.systemd.v1.GetServiceLogsRequest
+	(*LogEntry)(nil),                      // 13: server.api.systemd.v1.LogEntry
+	(*GetServiceLogsResponse)(nil),        // 14: server.api.systemd.v1.GetServiceLogsResponse
+	nil,                                   // 15: server.api.systemd.v1.LogEntry.FieldsEntry
+	(*systemd.UnitStatus)(nil),            // 16: server.api.pbs.v1.systemd.UnitStatus
 }
 var file_services_srv_api_systemd_proto_depIdxs = []int32{
-	15, // 0: server.api.systemd.v1.GetServiceStatusesResponse.items:type_name -> server.api.pbs.v1.systemd.UnitStatus
-	15, // 1: server.api.systemd.v1.GetServiceResponse.item:type_name -> server.api.pbs.v1.systemd.UnitStatus
-	15, // 2: server.api.systemd.v1.PutServiceAliasResponse.item:type_name -> server.api.pbs.v1.systemd.UnitStatus
-	15, // 3: server.api.systemd.v1.PutServiceResponse.item:type_name -> server.api.pbs.v1.systemd.UnitStatus
-	14, // 4: server.api.systemd.v1.LogEntry.fields:type_name -> server.api.systemd.v1.LogEntry.FieldsEntry
-	12, // 5: server.api.systemd.v1.GetServiceLogsResponse.logs:type_name -> server.api.systemd.v1.LogEntry
-	0,  // 6: server.api.systemd.v1.Systemd.ListServices:input_type -> server.api.systemd.v1.GetServiceStatusesRequest
-	0,  // 7: server.api.systemd.v1.Systemd.ListAllServices:input_type -> server.api.systemd.v1.GetServiceStatusesRequest
-	5,  // 8: server.api.systemd.v1.Systemd.PutServiceAlias:input_type -> server.api.systemd.v1.PutServiceAliasRequest
-	7,  // 9: server.api.systemd.v1.Systemd.DeleteServiceAlias:input_type -> server.api.systemd.v1.DeleteServiceRequest
-	9,  // 10: server.api.systemd.v1.Systemd.PutService:input_type -> server.api.systemd.v1.PutServiceRequest
-	7,  // 11: server.api.systemd.v1.Systemd.DeleteService:input_type -> server.api.systemd.v1.DeleteServiceRequest
-	2,  // 12: server.api.systemd.v1.Systemd.EnableService:input_type -> server.api.systemd.v1.GetEnableServiceRequest
-	2,  // 13: server.api.systemd.v1.Systemd.DisableService:input_type -> server.api.systemd.v1.GetEnableServiceRequest
-	11, // 14: server.api.systemd.v1.Systemd.GetServiceLogs:input_type -> server.api.systemd.v1.GetServiceLogsRequest
-	3,  // 15: server.api.systemd.v1.Systemd.GetService:input_type -> server.api.systemd.v1.GetServiceRequest
-	1,  // 16: server.api.systemd.v1.Systemd.ListServices:output_type -> server.api.systemd.v1.GetServiceStatusesResponse
-	1,  // 17: server.api.systemd.v1.Systemd.ListAllServices:output_type -> server.api.systemd.v1.GetServiceStatusesResponse
-	6,  // 18: server.api.systemd.v1.Systemd.PutServiceAlias:output_type -> server.api.systemd.v1.PutServiceAliasResponse
-	8,  // 19: server.api.systemd.v1.Systemd.DeleteServiceAlias:output_type -> server.api.systemd.v1.DeleteServiceResponse
-	10, // 20: server.api.systemd.v1.Systemd.PutService:output_type -> server.api.systemd.v1.PutServiceResponse
-	8,  // 21: server.api.systemd.v1.Systemd.DeleteService:output_type -> server.api.systemd.v1.DeleteServiceResponse
-	4,  // 22: server.api.systemd.v1.Systemd.EnableService:output_type -> server.api.systemd.v1.GetServiceResponse
-	4,  // 23: server.api.systemd.v1.Systemd.DisableService:output_type -> server.api.systemd.v1.GetServiceResponse
-	13, // 24: server.api.systemd.v1.Systemd.GetServiceLogs:output_type -> server.api.systemd.v1.GetServiceLogsResponse
-	4,  // 25: server.api.systemd.v1.Systemd.GetService:output_type -> server.api.systemd.v1.GetServiceResponse
+	16, // 0: server.api.systemd.v1.GetServiceStatusesResponse.items:type_name -> server.api.pbs.v1.systemd.UnitStatus
+	16, // 1: server.api.systemd.v1.GetServiceResponse.item:type_name -> server.api.pbs.v1.systemd.UnitStatus
+	16, // 2: server.api.systemd.v1.PutServiceAliasResponse.item:type_name -> server.api.pbs.v1.systemd.UnitStatus
+	16, // 3: server.api.systemd.v1.PutServiceResponse.item:type_name -> server.api.pbs.v1.systemd.UnitStatus
+	15, // 4: server.api.systemd.v1.LogEntry.fields:type_name -> server.api.systemd.v1.LogEntry.FieldsEntry
+	13, // 5: server.api.systemd.v1.GetServiceLogsResponse.logs:type_name -> server.api.systemd.v1.LogEntry
+	1,  // 6: server.api.systemd.v1.Systemd.ListServices:input_type -> server.api.systemd.v1.GetServiceStatusesRequest
+	0,  // 7: server.api.systemd.v1.Systemd.ListAllServices:input_type -> server.api.systemd.v1.ListAllServiceStatusesRequest
+	6,  // 8: server.api.systemd.v1.Systemd.PutServiceAlias:input_type -> server.api.systemd.v1.PutServiceAliasRequest
+	8,  // 9: server.api.systemd.v1.Systemd.DeleteServiceAlias:input_type -> server.api.systemd.v1.DeleteServiceRequest
+	10, // 10: server.api.systemd.v1.Systemd.PutService:input_type -> server.api.systemd.v1.PutServiceRequest
+	8,  // 11: server.api.systemd.v1.Systemd.DeleteService:input_type -> server.api.systemd.v1.DeleteServiceRequest
+	3,  // 12: server.api.systemd.v1.Systemd.EnableService:input_type -> server.api.systemd.v1.GetEnableServiceRequest
+	3,  // 13: server.api.systemd.v1.Systemd.DisableService:input_type -> server.api.systemd.v1.GetEnableServiceRequest
+	12, // 14: server.api.systemd.v1.Systemd.GetServiceLogs:input_type -> server.api.systemd.v1.GetServiceLogsRequest
+	4,  // 15: server.api.systemd.v1.Systemd.GetService:input_type -> server.api.systemd.v1.GetServiceRequest
+	2,  // 16: server.api.systemd.v1.Systemd.ListServices:output_type -> server.api.systemd.v1.GetServiceStatusesResponse
+	2,  // 17: server.api.systemd.v1.Systemd.ListAllServices:output_type -> server.api.systemd.v1.GetServiceStatusesResponse
+	7,  // 18: server.api.systemd.v1.Systemd.PutServiceAlias:output_type -> server.api.systemd.v1.PutServiceAliasResponse
+	9,  // 19: server.api.systemd.v1.Systemd.DeleteServiceAlias:output_type -> server.api.systemd.v1.DeleteServiceResponse
+	11, // 20: server.api.systemd.v1.Systemd.PutService:output_type -> server.api.systemd.v1.PutServiceResponse
+	9,  // 21: server.api.systemd.v1.Systemd.DeleteService:output_type -> server.api.systemd.v1.DeleteServiceResponse
+	5,  // 22: server.api.systemd.v1.Systemd.EnableService:output_type -> server.api.systemd.v1.GetServiceResponse
+	5,  // 23: server.api.systemd.v1.Systemd.DisableService:output_type -> server.api.systemd.v1.GetServiceResponse
+	14, // 24: server.api.systemd.v1.Systemd.GetServiceLogs:output_type -> server.api.systemd.v1.GetServiceLogsResponse
+	5,  // 25: server.api.systemd.v1.Systemd.GetService:output_type -> server.api.systemd.v1.GetServiceResponse
 	16, // [16:26] is the sub-list for method output_type
 	6,  // [6:16] is the sub-list for method input_type
 	6,  // [6:6] is the sub-list for extension type_name
@@ -843,14 +893,14 @@ func file_services_srv_api_systemd_proto_init() {
 	if File_services_srv_api_systemd_proto != nil {
 		return
 	}
-	file_services_srv_api_systemd_proto_msgTypes[11].OneofWrappers = []any{}
+	file_services_srv_api_systemd_proto_msgTypes[12].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_services_srv_api_systemd_proto_rawDesc), len(file_services_srv_api_systemd_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   15,
+			NumMessages:   16,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

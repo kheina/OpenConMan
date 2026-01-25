@@ -15,13 +15,13 @@ service Systemd {
   };
 
   rpc ListServices(GetServiceStatusesRequest)
-      returns (GetServiceStatusesResponse) {
+      returns (stream GetServiceStatusesResponse) {
     option (google.api.http) = {
       get: "/v1/services"
     };
   }
 
-  rpc ListAllServices(GetServiceStatusesRequest)
+  rpc ListAllServices(ListAllServiceStatusesRequest)
       returns (GetServiceStatusesResponse) {
     option (google.api.http) = {
       get: "/v1/services/all"
@@ -83,7 +83,13 @@ service Systemd {
   }
 }
 
-message GetServiceStatusesRequest {}
+message ListAllServiceStatusesRequest {}
+
+message GetServiceStatusesRequest {
+  // Should the connection stay open and send updates on the status of the
+  // service over the same connection
+  bool live = 10;
+}
 
 message GetServiceStatusesResponse {
   repeated server.api.pbs.v1.systemd.UnitStatus items = 10;
