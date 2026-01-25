@@ -115,3 +115,25 @@ export async function cetch(url: string, options: CetchOptions = {}): Promise<Re
 	}
 	return response;
 }
+
+export async function JsonPipeThrough(res: Response, abort: AbortController, func: ((json: any) => void | PromiseLike<void>)): Promise<void> {
+	if (!res.body) return;
+	const ro = res.body.pipeThrough(
+		new TextDecoderStream("utf-8", { "fatal": false }),
+		{ signal: abort.signal },
+	).getReader();
+
+	let ch = "";
+	while (!abort.signal.aborted) {
+		const r = await ro.read();
+		if (r.done) return;
+		ch += r.value;
+		try {
+			const rj: any = JSON.parse(ch).result;
+			ch = "";
+			func(rj);
+		} catch {
+			continue;
+		}
+	}
+}

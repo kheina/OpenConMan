@@ -83,7 +83,7 @@ import { onMounted, onUnmounted, ref, type Ref } from 'vue';
 import type { UnitLogs, UnitStatus } from '@/types/systemd'; 
 import unitfiletemplate from '@/constants/unit_file';
 import CodeEditor from '@/components/CodeEditor.vue';
-import { cetch } from '@/utilities';
+import { cetch, JsonPipeThrough } from '@/utilities';
 
 const host = `${window.location.protocol}//${window.location.hostname}:5050`;
 const stopped: Set<string> = new Set(["dead", "disabled"]);
@@ -161,26 +161,12 @@ function GetServiceLogs(u: { name: string }) {
 	const abort = _abort;
 	cetch(url, {
 		signal: abort.signal,
-	}).then(res => {
-		if (!res.body) return;
-		const ro = res.body.pipeThrough(
-			new TextDecoderStream("utf-8", { "fatal": false }),
-			{ signal: abort.signal },
-		).getReader();
-
-		const rf = () => {
-			ro.read().then(r => {
-				if (r.done) return;
-				const rj: UnitLogs = JSON.parse(r.value).result;
-				if (logs.value) {
-					if (live) logs.value.logs.unshift(...rj.logs);
-					else logs.value.logs = logs.value.logs.concat(rj.logs);
-				} else logs.value = rj;
-				rf();
-			});
-		};
-		rf();
-	}).catch(
+	}).then(res => JsonPipeThrough(res, abort, (r: UnitLogs) => {
+		if (logs.value) {
+			if (live) logs.value.logs.unshift(...r.logs);
+			else logs.value.logs = logs.value.logs.concat(r.logs);
+		} else logs.value = r;
+	})).catch(
 		console.error
 	).finally(abort.abort);
 }
